@@ -1,15 +1,14 @@
-# 跨端指南针 App (CMP) 需求与架构开发指导文档
+# 《原点罗盘 (Pixel Geo)》跨端开发需求与架构指导文档
 
 ## 1. 项目概述
 
-本项目旨在利用 Compose Multiplatform (CMP) 技术，开发一款支持 iOS 与 Android 双端的纯粹、专业级指南针与经纬度测绘工具
-App。核心目标是在合规的前提下（尤其是针对国区 iOS 设备的 UI 屏蔽），通过底层 API 直接为用户提供实时、精准的
-WGS-84 经纬度、海拔及高精度方位角信息。
+本项目《原点罗盘 (Pixel Geo)》旨在利用 Compose Multiplatform (CMP) 技术，开发一款支持 iOS 与 Android
+双端的纯粹、专业级指南针与经纬度测绘工具 App。核心目标是在合规的前提下（尤其是针对国区 iOS 设备的 UI
+屏蔽），通过底层 API 直接为用户提供实时、精准的 WGS-84 经纬度、海拔及高精度方位角信息。
 
 ## 2. 功能需求边界 (Functional Requirements)
 
 ### 2.1 核心定向功能
-
 * **实时方位角 (Heading)：** 精确显示设备当前的朝向（0° - 359°）。
 * **双北极模式：** 支持用户在 UI 上无缝切换**真北 (True North)** 与 **磁北 (Magnetic North)**。真北数据需结合
   GPS 提供的地理位置进行磁偏角计算。
@@ -40,13 +39,11 @@ WGS-84 经纬度、海拔及高精度方位角信息。
 项目将严格遵循 **Clean Architecture** 思想，结合 **MVI (Model-View-Intent)** 模式进行单向数据流管理。
 
 ### 4.1 表现层 (Presentation Layer - Shared)
-
 * **UI 构建：** 100% 使用 Compose Multiplatform 开发，跨端共享 UI 代码。
 * **状态管理：** 使用 Kotlin Coroutines 与 `StateFlow`。ViewModel 接收用户的 `Intent`
   （如切换格式、请求权限），经过业务逻辑处理后，向 View 层发射唯一且不可变的 `UiState`。
 
 ### 4.2 领域层 (Domain Layer - Shared)
-
 * **职责：** 封装平台无关的核心纯业务逻辑。
 * **核心 UseCase：**
     * `CalculateTrueNorthUseCase`: 根据经纬度和磁北计算真北。
@@ -54,7 +51,6 @@ WGS-84 经纬度、海拔及高精度方位角信息。
     * `ApplyLowPassFilterUseCase`: 核心**防抖算法**，对传感器传来的原始方位角高频数据进行低通滤波处理，确保表盘指针不剧烈抖动。
 
 ### 4.3 数据与平台硬件层 (Data & Platform Layer)
-
 通过依赖反转（Dependency Inversion），在 Shared 模块定义接口，在 iOS/Android 平台模块分别实现。
 
 * **Shared Interfaces:**
