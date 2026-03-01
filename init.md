@@ -29,7 +29,7 @@
 ### 2.3 状态与精度反馈
 
 * **信号指示：** 根据底层返回的 `horizontalAccuracy` (水平精度)，以直观的 UI 元素（如红黄绿状态点及具体误差米数）向用户反馈当前
-  GPS 信号质量。
+  GPS 信号质量。精度定义：**<10m 为绿色（优秀），10~50m 为黄色（良好），>50m 为红色（较差）**。
 
 ### 2.4 坐标交互
 
@@ -62,7 +62,8 @@
 * **UI/UX 表现：** 采用全局深色模式 (Dark Mode)，高对比度纯粹工具风。指南针表盘需支持 60fps+
   的丝滑旋转，文字展示区采用等宽字体 (Monospaced) 防止高频刷新带来的 UI 闪烁。
 * **生命周期与功耗：** App 退入后台 (`onPause`/`sceneDidEnterBackground`) 时，必须立即注销所有传感器和
-  GPS 监听以节省电量；切回前台时无缝恢复。
+  GPS 监听以节省电量；切回前台时无缝恢复。统一引入 **Jetpack Lifecycle (`androidx.lifecycle`)**
+  组件以便在跨端共享代码中统一感知并管控前后台状态。
 * **优雅降级：** 在用户拒绝定位权限或仅授予"模糊定位"时，App
   自动降级为纯磁力计指南针，并友好提示精确定位功能不可用，提供前往系统设置的快捷入口。
 
@@ -78,10 +79,10 @@
 ### 4.2 领域层 (Domain Layer - Shared)
 * **职责：** 封装平台无关的核心纯业务逻辑。
 * **核心 UseCase：**
-    * `CalculateTrueNorthUseCase`: 根据经纬度和磁北计算真北。
     * `FormatLocationUseCase`: 处理 WGS-84 坐标向不同文本格式的转换。
-    * `ApplyLowPassFilterUseCase`: 核心**防抖算法**，对传感器传来的原始方位角高频数据进行低通滤波处理，确保表盘指针不剧烈抖动。
   * `BuildShareTextUseCase`: 根据当前 `LocationModel` 和坐标格式偏好，生成预置分享文案。
+  * _(注：方位角防抖直接由 Compose 动画如 `animateFloatAsState(spring(...))`
+    处理，移除手动低通滤波算法。真北与磁北数值直接从平台底层获取，移除手动计算偏角的逻辑)_
 
 ### 4.3 数据与平台硬件层 (Data & Platform Layer)
 通过依赖反转（Dependency Inversion），在 Shared 模块定义接口，在 iOS/Android 平台模块分别实现。
@@ -98,8 +99,13 @@
 
 * **Shared Interfaces:**
     ```kotlin
+    data class CompassHeading(
+        val magneticHeading: Float,
+        val trueHeading: Float? // 如果未获取到 GPS 坐标，则不提供真北
+    )
+
     interface CompassSensor {
-        val heading: Flow<Float>
+        val headingData: Flow<CompassHeading>
         fun start()
         fun stop()
     }
@@ -119,10 +125,11 @@
     ```
 
 * **iOS Implementation (`iosMain`):** 封装 `CLLocationManager`，实现上述接口，处理 Objective-C
-  Delegate 到 Kotlin Flow 的转换。
+  Delegate 到 Kotlin Flow 的转换。直接提供底层计算好的 `trueHeading` 和 `magneticHeading`。
 * **Android Implementation (`androidMain`):** 封装 `SensorManager` (
-  提取地磁和加速度传感器数据合成方向) 以及 `FusedLocationProviderClient`
-  。这种分层隔离使得在实体设备上调试特定的硬件传感器行为变得极其干净，不会污染核心业务逻辑。
+  使用基于硬件融合的 **旋转矢量传感器 `TYPE_ROTATION_VECTOR`** 获取平滑方位角数据) 以及
+  `FusedLocationProviderClient`。同时利用原生的 `GeomagneticField` 计算真北。
+  这种分层隔离使得在实体设备上调试特定的硬件传感器行为变得极其干净，不会污染核心业务逻辑。
 * **DataStore Implementation：** `UserPreferencesRepository` 的实现基于 AndroidX DataStore
   Preferences，
   通过 `expect`/`actual` 或 Koin 注入适配双端。

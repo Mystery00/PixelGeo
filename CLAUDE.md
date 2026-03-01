@@ -39,11 +39,10 @@ repository.
 向 View 发射不可变的 `UiState`。
 
 **领域层**（`commonMain`）— 平台无关的纯业务逻辑：
-
-- `CalculateTrueNorthUseCase` — 依据 GPS 位置计算磁偏角，得出真北方向
 - `FormatLocationUseCase` — WGS-84 坐标格式转换（十进制度数 DD / 度分秒 DMS）
-- `ApplyLowPassFilterUseCase` — 对高频传感器数据做低通滤波，防止指南针指针抖动
 - `BuildShareTextUseCase` — 根据当前位置和坐标格式偏好生成预置分享文案
+- *(注：真北及磁偏角直接从平台底层 API 获取，方位角防抖由 Compose 动画如 `animateFloatAsState`
+  处理，不再需要手写低通滤波和真北算法)*
 
 **数据/平台层** — 接口在 `commonMain` 定义，各平台分别实现：
 
@@ -55,9 +54,9 @@ data class LocationModel(
     val horizontalAccuracy: Double  // 水平精度（米）
 )
 
-interface CompassSensor {
-    val heading: Flow<Float>;fun start();fun stop()
-}
+data class CompassHeading(val magneticHeading: Float, val trueHeading: Float?)
+
+interface CompassSensor { val headingData: Flow<CompassHeading>; fun start(); fun stop() }
 interface LocationSensor {
     val locationData: Flow<LocationModel>;fun start();fun stop()
 }
@@ -69,8 +68,10 @@ interface UserPreferencesRepository {
 }
 ```
 
-- `androidMain`：`SensorManager`（加速度计 + 磁力计合成方位角）+ `FusedLocationProviderClient`
-- `iosMain`：封装 `CLLocationManager`，将 Obj-C Delegate 桥接为 Kotlin Flow
+- `androidMain`：`SensorManager`（使用旋转矢量传感器 `TYPE_ROTATION_VECTOR`）+ `GeomagneticField` (
+  计算真北) + `FusedLocationProviderClient`
+- `iosMain`：封装 `CLLocationManager`，将 Obj-C Delegate 桥接为 Kotlin Flow，直接提供 `trueHeading`与
+  `magneticHeading`
 
 ### 多平台开发约定
 
@@ -82,12 +83,13 @@ interface UserPreferencesRepository {
 
 ### 待引入依赖（尚未添加至 Gradle）
 
-| 用途      | 库                              |
-|---------|--------------------------------|
-| 依赖注入    | Koin（支持 KMP）                   |
-| 权限管理    | MOKO Permissions               |
-| 异步/响应式  | Kotlin Coroutines & Flow       |
-| 用户偏好持久化 | AndroidX DataStore Preferences |
+| 用途      | 库                                        |
+|---------|------------------------------------------|
+| 跨端生命周期  | Jetpack Lifecycle (`androidx.lifecycle`) |
+| 依赖注入    | Koin（支持 KMP）                             |
+| 权限管理    | MOKO Permissions                         |
+| 异步/响应式  | Kotlin Coroutines & Flow                 |
+| 用户偏好持久化 | AndroidX DataStore Preferences           |
 
 ## UI/UX 要求
 
