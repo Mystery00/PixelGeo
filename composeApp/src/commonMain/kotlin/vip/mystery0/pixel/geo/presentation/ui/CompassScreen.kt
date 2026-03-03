@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,7 +44,8 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
 
     // 权限管理：启动时主动请求定位权限
     val factory = rememberPermissionsControllerFactory()
-    val controller = factory.createPermissionsController()
+    // controller 必须用 remember 缓存，避免 recompose 时重新创建导致权限回调丢失
+    val controller = remember(factory) { factory.createPermissionsController() }
     BindEffect(controller)
 
     LaunchedEffect(Unit) {
@@ -53,6 +55,14 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
             // 用户拒绝权限，UI 自动降级（传感器无位置数据时 trueHeading 为 null）
         }
     }
+
+    // 根据当前北极模式计算显示的方位角和等待状态
+    val displayHeading = when (uiState.northMode) {
+        NorthMode.MAGNETIC_NORTH -> uiState.heading.magneticHeading
+        NorthMode.TRUE_NORTH -> uiState.heading.trueHeading
+    }
+    val isWaitingForGps = uiState.northMode == NorthMode.TRUE_NORTH
+        && uiState.heading.trueHeading == null
 
     Column(
         modifier = Modifier
@@ -66,13 +76,6 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            val displayHeading = when (uiState.northMode) {
-                NorthMode.MAGNETIC_NORTH -> uiState.heading.magneticHeading
-                NorthMode.TRUE_NORTH -> uiState.heading.trueHeading
-            }
-            val isWaitingForGps = uiState.northMode == NorthMode.TRUE_NORTH
-                && uiState.heading.trueHeading == null
-
             CompassCanvas(
                 heading = displayHeading,
                 isWaitingForGps = isWaitingForGps
@@ -82,7 +85,7 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
         // 下半部分：坐标数据面板
         LocationDataPanel(
             uiState = uiState,
-            onIntent = viewModel::handleIntent
+            onIntent = { viewModel.handleIntent(it) }
         )
     }
 }
