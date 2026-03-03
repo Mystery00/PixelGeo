@@ -68,6 +68,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.moko.permissions)
             implementation(libs.moko.permissions.compose)
             implementation(libs.androidx.datastore.preferences)

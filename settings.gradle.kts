@@ -25,7 +25,13 @@ dependencyResolutionManagement {
             }
         }
         // 阿里云 Maven 镜像，替代 Maven Central，解决国内网络访问问题
-        maven("https://maven.aliyun.com/repository/public")
+        maven("https://maven.aliyun.com/repository/public") {
+            mavenContent {
+                excludeGroupAndSubgroups("androidx")
+                excludeGroupAndSubgroups("com.android")
+                excludeGroupAndSubgroups("com.google")
+            }
+        }
         mavenCentral()
     }
 }
