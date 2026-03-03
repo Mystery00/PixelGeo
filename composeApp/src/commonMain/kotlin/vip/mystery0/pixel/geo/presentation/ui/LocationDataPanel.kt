@@ -1,14 +1,13 @@
 package vip.mystery0.pixel.geo.presentation.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +47,7 @@ fun LocationDataPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .background(Color(0xFF1A1A1A))
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -56,7 +56,8 @@ fun LocationDataPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // 10dp 圆点（颜色随信号质量变化）
             val dotColor = when (uiState.gpsSignalQuality) {
@@ -68,8 +69,6 @@ fun LocationDataPanel(
             Canvas(modifier = Modifier.size(10.dp)) {
                 drawCircle(color = dotColor)
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
 
             // 精度文字
             val accuracyText = if (uiState.location != null) {
@@ -176,7 +175,12 @@ fun LocationDataPanel(
                             uiState.coordinateFormat
                         )
                         val alt = formatUseCase.formatAltitude(uiState.location.altitude)
-                        clipboardManager.setText(AnnotatedString("$lat $lon $alt"))
+                        val text = buildString {
+                            appendLine(lat)
+                            appendLine(lon)
+                            append(alt)
+                        }
+                        clipboardManager.setText(AnnotatedString(text))
                     }
                 },
                 enabled = uiState.location != null,
@@ -221,7 +225,7 @@ private fun CoordinateRow(label: String, value: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = label,
+            text = "$label：",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
