@@ -32,9 +32,12 @@ import kotlin.math.sin
 
 /**
  * 指南针表盘组件
- * @param heading 当前方位角（null 表示真北等待态）
- * @param isWaitingForGps 是否处于真北等待 GPS 信号状态
- * @param modifier Compose 修饰符
+ *
+ * @param heading 当前方位角（0-359°）。真北模式下 GPS 未就绪时为 null。
+ * @param isWaitingForGps 是否处于真北等待 GPS 信号状态。
+ *   参数约束：[heading] == null 与 [isWaitingForGps] == true 应同步出现；
+ *   若 [heading] != null 且 [isWaitingForGps] == true，表盘仍会旋转但文字显示 "--"（不推荐此组合）。
+ * @param modifier Compose 修饰符，作用于整个组件的根容器
  */
 @Composable
 fun CompassCanvas(
@@ -78,28 +81,37 @@ fun CompassCanvas(
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.minDimension / 2f
 
+            // I1 修复：预计算所有像素值，避免在循环和绘制调用中重复转换
+            val borderWidthPx = 2.dp.toPx()
+            val tickMarginPx = 4.dp.toPx()
+            val mainTickLengthPx = 20.dp.toPx()
+            val subTickLengthPx = 10.dp.toPx()
+            val mainTickWidthPx = 2.dp.toPx()
+            val subTickWidthPx = 1.dp.toPx()
+            val northTickLengthPx = 30.dp.toPx()
+            val northTickWidthPx = 3.dp.toPx()
+            val edgeRadiusPx = radius - tickMarginPx
+
             // 外圆框
             drawCircle(
                 color = Color.White,
-                radius = radius - 2.dp.toPx(),
+                radius = radius - borderWidthPx,
                 center = center,
-                style = Stroke(width = 2.dp.toPx())
+                style = Stroke(width = borderWidthPx)
             )
 
             // 刻度线：每 10° 一短线，每 30° 一长线
             for (angle in 0 until 360 step 10) {
-                // I2 修复：跳过 0°，北方（0°）由专用红色刻度处理，避免刻度线重叠
+                // 跳过 0°，北方由专用红色刻度处理，避免刻度线重叠
                 if (angle == 0) continue
 
                 val isMain = angle % 30 == 0
-                val lineLength = if (isMain) 20.dp.toPx() else 10.dp.toPx()
-                val strokeWidth = if (isMain) 2.dp.toPx() else 1.dp.toPx()
+                val lineLength = if (isMain) mainTickLengthPx else subTickLengthPx
+                val strokeWidth = if (isMain) mainTickWidthPx else subTickWidthPx
                 val lineColor = if (isMain) Color.White else Color.Gray
 
-                // S1 修复：使用 kotlin.math.PI 替代 Math.toRadians
                 val angleRad = angle * PI / 180.0
-                val startRadius = radius - lineLength - 4.dp.toPx()
-                val endRadius = radius - 4.dp.toPx()
+                val startRadius = edgeRadiusPx - lineLength
 
                 drawLine(
                     color = lineColor,
@@ -108,8 +120,8 @@ fun CompassCanvas(
                         center.y - startRadius * cos(angleRad).toFloat()
                     ),
                     end = Offset(
-                        center.x + endRadius * sin(angleRad).toFloat(),
-                        center.y - endRadius * cos(angleRad).toFloat()
+                        center.x + edgeRadiusPx * sin(angleRad).toFloat(),
+                        center.y - edgeRadiusPx * cos(angleRad).toFloat()
                     ),
                     strokeWidth = strokeWidth,
                     cap = StrokeCap.Round
@@ -117,12 +129,11 @@ fun CompassCanvas(
             }
 
             // 北方（0°）红色长刻度，突出标识
-            val northLength = 30.dp.toPx()
             drawLine(
                 color = Color.Red,
-                start = Offset(center.x, center.y - (radius - northLength - 4.dp.toPx())),
-                end = Offset(center.x, center.y - (radius - 4.dp.toPx())),
-                strokeWidth = 3.dp.toPx(),
+                start = Offset(center.x, center.y - (edgeRadiusPx - northTickLengthPx)),
+                end = Offset(center.x, center.y - edgeRadiusPx),
+                strokeWidth = northTickWidthPx,
                 cap = StrokeCap.Round
             )
         }
