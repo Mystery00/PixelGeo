@@ -48,12 +48,13 @@ fun CompassCanvas(
     )
 
     Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         // 表盘：整体旋转实现指针效果（表盘转，正上方始终是北方）
         Canvas(
-            modifier = modifier
+            modifier = Modifier
                 .size(280.dp)
                 .rotate(-animatedHeading)
         ) {
