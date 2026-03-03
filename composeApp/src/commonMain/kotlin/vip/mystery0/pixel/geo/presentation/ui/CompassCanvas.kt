@@ -5,14 +5,18 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -22,6 +26,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -37,11 +42,23 @@ fun CompassCanvas(
     isWaitingForGps: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // 使用 spring 动画平滑旋转，替代手写低通滤波
+    // C1 修复：使用累积角度追踪绝对旋转量，避免 360°/0° 边界跨越时动画反转
+    val accumulatedHeadingState = remember { mutableStateOf(heading ?: 0f) }
+
+    // 每次 recompose 时计算最短路径并更新累积值
+    val newRaw = heading ?: accumulatedHeadingState.value
+    val current = accumulatedHeadingState.value % 360f
+    val delta = ((newRaw - current + 540f) % 360f) - 180f
+    val newAccumulated = accumulatedHeadingState.value + delta
+    if (newAccumulated != accumulatedHeadingState.value) {
+        accumulatedHeadingState.value = newAccumulated
+    }
+
+    // S3 修复：改为无回弹（DampingRatioNoBouncy），工具类指南针不应有回弹效果
     val animatedHeading by animateFloatAsState(
-        targetValue = heading ?: 0f,
+        targetValue = accumulatedHeadingState.value,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
+            dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessLow
         ),
         label = "compassHeading"
@@ -71,12 +88,16 @@ fun CompassCanvas(
 
             // 刻度线：每 10° 一短线，每 30° 一长线
             for (angle in 0 until 360 step 10) {
+                // I2 修复：跳过 0°，北方（0°）由专用红色刻度处理，避免刻度线重叠
+                if (angle == 0) continue
+
                 val isMain = angle % 30 == 0
                 val lineLength = if (isMain) 20.dp.toPx() else 10.dp.toPx()
                 val strokeWidth = if (isMain) 2.dp.toPx() else 1.dp.toPx()
                 val lineColor = if (isMain) Color.White else Color.Gray
 
-                val angleRad = Math.toRadians(angle.toDouble())
+                // S1 修复：使用 kotlin.math.PI 替代 Math.toRadians
+                val angleRad = angle * PI / 180.0
                 val startRadius = radius - lineLength - 4.dp.toPx()
                 val endRadius = radius - 4.dp.toPx()
 
@@ -108,29 +129,37 @@ fun CompassCanvas(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 当前方位角显示，或真北等待态提示
-        if (isWaitingForGps) {
-            // 真北等待态：表盘冻结，显示占位符和提示
-            Text(
-                text = "--",
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.Gray,
-                fontFamily = FontFamily.Monospace
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "正在获取 GPS 信号…",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-        } else {
-            // 正常显示：三位数角度 + 度符号
-            Text(
-                text = "%03.0f°".format(heading ?: animatedHeading),
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.White,
-                fontFamily = FontFamily.Monospace
-            )
+        // I4 修复：固定最小高度，避免 isWaitingForGps 切换时文字区域高度跳变
+        Box(
+            modifier = Modifier.heightIn(min = 72.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            // 当前方位角显示，或真北等待态提示
+            if (isWaitingForGps) {
+                // 真北等待态：表盘冻结，显示占位符和提示
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "--",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = Color.Gray,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "正在获取 GPS 信号…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                // 正常显示：三位数角度 + 度符号
+                Text(
+                    text = "%03.0f°".format(heading ?: animatedHeading),
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = Color.White,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
     }
 }
