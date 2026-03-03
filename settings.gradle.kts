@@ -24,6 +24,8 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.google")
             }
         }
+        // 阿里云 Maven 镜像，替代 Maven Central，解决国内网络访问问题
+        maven("https://maven.aliyun.com/repository/public")
         mavenCentral()
     }
 }
