@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import vip.mystery0.pixel.geo.domain.model.CoordinateFormat
 import vip.mystery0.pixel.geo.domain.model.NorthMode
 import vip.mystery0.pixel.geo.domain.usecase.FormatLocationUseCase
 import vip.mystery0.pixel.geo.presentation.CompassIntent
@@ -43,6 +44,13 @@ fun LocationDataPanel(
     // 直接实例化（spec 要求，不通过 Koin 注入）
     val formatUseCase = remember { FormatLocationUseCase() }
     val clipboardManager = LocalClipboardManager.current
+    // 按钮颜色配置（@Composable 级别，统一供 4 个按钮复用）
+    val buttonColors = ButtonDefaults.buttonColors(
+        containerColor = Color(0xFF2C2C2C),
+        contentColor = Color.White,
+        disabledContainerColor = Color(0xFF1E1E1E),
+        disabledContentColor = Color.DarkGray
+    )
 
     Column(
         modifier = Modifier
@@ -116,13 +124,6 @@ fun LocationDataPanel(
                 .padding(top = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val buttonColors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2C2C2C),
-                contentColor = Color.White,
-                disabledContainerColor = Color(0xFF1E1E1E),
-                disabledContentColor = Color.DarkGray
-            )
-
             // 真北/磁北切换按钮
             Button(
                 onClick = {
@@ -146,10 +147,8 @@ fun LocationDataPanel(
             Button(
                 onClick = {
                     val nextFormat = when (uiState.coordinateFormat) {
-                        vip.mystery0.pixel.geo.domain.model.CoordinateFormat.DD  ->
-                            vip.mystery0.pixel.geo.domain.model.CoordinateFormat.DMS
-                        vip.mystery0.pixel.geo.domain.model.CoordinateFormat.DMS ->
-                            vip.mystery0.pixel.geo.domain.model.CoordinateFormat.DD
+                        CoordinateFormat.DD  -> CoordinateFormat.DMS
+                        CoordinateFormat.DMS -> CoordinateFormat.DD
                     }
                     onIntent(CompassIntent.ToggleCoordinateFormat(nextFormat))
                 },
