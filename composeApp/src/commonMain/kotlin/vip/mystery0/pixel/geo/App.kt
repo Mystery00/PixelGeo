@@ -4,14 +4,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import org.koin.compose.KoinApplication
-import org.koin.core.annotation.KoinExperimentalAPI
 import vip.mystery0.pixel.geo.di.appModule
 import vip.mystery0.pixel.geo.di.platformModule
 import vip.mystery0.pixel.geo.presentation.ui.CompassScreen
 
 typealias KoinAppDeclaration = org.koin.core.KoinApplication.() -> Unit
 
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun App(koinAppDeclaration: KoinAppDeclaration = {}) {
     KoinApplication(

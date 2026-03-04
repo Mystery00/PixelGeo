@@ -3,8 +3,12 @@ package vip.mystery0.pixel.geo.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+import dev.icerock.moko.permissions.location.LOCATION
 import org.koin.compose.viewmodel.koinViewModel
 import vip.mystery0.pixel.geo.domain.model.NorthMode
 import vip.mystery0.pixel.geo.presentation.CompassViewModel
@@ -62,7 +67,7 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
         NorthMode.TRUE_NORTH -> uiState.heading.trueHeading
     }
     val isWaitingForGps = uiState.northMode == NorthMode.TRUE_NORTH
-        && uiState.heading.trueHeading == null
+            && uiState.heading.trueHeading == null
 
     Column(
         modifier = Modifier
@@ -87,5 +92,6 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
             uiState = uiState,
             onIntent = { viewModel.handleIntent(it) }
         )
+        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
 }

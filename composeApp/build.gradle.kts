@@ -36,6 +36,7 @@ kotlin {
 
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")
+        optIn.add("org.koin.core.annotation.KoinExperimentalAPI")
         optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
         optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
 
@@ -71,6 +72,7 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.moko.permissions)
             implementation(libs.moko.permissions.compose)
+            implementation(libs.moko.permissions.location)
             implementation(libs.androidx.datastore.preferences)
         }
     }

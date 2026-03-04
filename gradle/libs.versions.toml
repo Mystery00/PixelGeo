@@ -11,9 +11,9 @@ composeMultiplatform = "1.10.1"
 androidx-activity = "1.12.4"
 androidx-lifecycle = "2.9.6"
 material3 = "1.10.0-alpha05"
-koin = "4.0.2"
-moko-permissions = "0.18.1"
-datastore = "1.1.4"
+koin = "4.1.1"
+moko-permissions = "0.20.1"
+datastore = "1.2.0"
 play-services-location = "21.3.0"
 
 [libraries]
@@ -31,6 +31,7 @@ koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", ver
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 moko-permissions = { module = "dev.icerock.moko:permissions", version.ref = "moko-permissions" }
 moko-permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "moko-permissions" }
+moko-permissions-location = { module = "dev.icerock.moko:permissions-location", version.ref = "moko-permissions" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
 
