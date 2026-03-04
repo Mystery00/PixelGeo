@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
@@ -67,6 +66,9 @@ fun CompassCanvas(
         label = "compassHeading"
     )
 
+    // Canvas DrawScope 无法访问 MaterialTheme，提前在 Composable 层取色
+    val colorScheme = MaterialTheme.colorScheme
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -94,7 +96,7 @@ fun CompassCanvas(
 
             // 外圆框
             drawCircle(
-                color = Color.White,
+                color = colorScheme.outline,
                 radius = radius - borderWidthPx,
                 center = center,
                 style = Stroke(width = borderWidthPx)
@@ -108,7 +110,7 @@ fun CompassCanvas(
                 val isMain = angle % 30 == 0
                 val lineLength = if (isMain) mainTickLengthPx else subTickLengthPx
                 val strokeWidth = if (isMain) mainTickWidthPx else subTickWidthPx
-                val lineColor = if (isMain) Color.White else Color.Gray
+                val lineColor = if (isMain) colorScheme.outline else colorScheme.outlineVariant
 
                 val angleRad = angle * PI / 180.0
                 val startRadius = edgeRadiusPx - lineLength
@@ -128,9 +130,9 @@ fun CompassCanvas(
                 )
             }
 
-            // 北方（0°）红色长刻度，突出标识
+            // 北方（0°）长刻度，突出标识
             drawLine(
-                color = Color.Red,
+                color = colorScheme.primary,
                 start = Offset(center.x, center.y - (edgeRadiusPx - northTickLengthPx)),
                 end = Offset(center.x, center.y - edgeRadiusPx),
                 strokeWidth = northTickWidthPx,
@@ -152,14 +154,14 @@ fun CompassCanvas(
                     Text(
                         text = "--",
                         style = MaterialTheme.typography.headlineLarge,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = FontFamily.Monospace
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "正在获取 GPS 信号…",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
@@ -167,7 +169,7 @@ fun CompassCanvas(
                 Text(
                     text = "%03.0f°".format(heading ?: animatedHeading),
                     style = MaterialTheme.typography.headlineLarge,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = FontFamily.Monospace
                 )
             }

@@ -46,16 +46,16 @@ fun LocationDataPanel(
     val formatUseCase = remember { FormatLocationUseCase() }
     // 按钮颜色配置（@Composable 级别，统一供 4 个按钮复用）
     val buttonColors = ButtonDefaults.buttonColors(
-        containerColor = Color(0xFF2C2C2C),
-        contentColor = Color.White,
-        disabledContainerColor = Color(0xFF1E1E1E),
-        disabledContentColor = Color.DarkGray
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        disabledContainerColor = MaterialTheme.colorScheme.surface,
+        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A1A1A))
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -87,7 +87,7 @@ fun LocationDataPanel(
             Text(
                 text = accuracyText,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.LightGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = FontFamily.Monospace
             )
         }
@@ -116,7 +116,7 @@ fun LocationDataPanel(
             Text(
                 text = "等待定位数据…",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -232,12 +232,12 @@ private fun CoordinateRow(label: String, value: String) {
         Text(
             text = "$label：",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily.Monospace
         )
     }
