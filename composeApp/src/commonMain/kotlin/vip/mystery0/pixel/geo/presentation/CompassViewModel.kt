@@ -11,7 +11,6 @@ import vip.mystery0.pixel.geo.data.repository.UserPreferencesRepository
 import vip.mystery0.pixel.geo.data.sensor.CompassSensor
 import vip.mystery0.pixel.geo.data.sensor.LocationSensor
 import vip.mystery0.pixel.geo.domain.usecase.BuildShareTextUseCase
-import vip.mystery0.pixel.geo.domain.usecase.FormatLocationUseCase
 import vip.mystery0.pixel.geo.util.shareText
 
 // 主界面 ViewModel：订阅传感器和偏好数据，处理用户意图，管理传感器生命周期
@@ -19,7 +18,6 @@ class CompassViewModel(
     private val compassSensor: CompassSensor,
     private val locationSensor: LocationSensor,
     private val preferencesRepository: UserPreferencesRepository,
-    private val formatLocationUseCase: FormatLocationUseCase,
     private val buildShareTextUseCase: BuildShareTextUseCase
 ) : ViewModel() {
 

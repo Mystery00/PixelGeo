@@ -22,5 +22,5 @@ val appModule = module {
     single { BuildShareTextUseCase(get()) }
 
     // 表现层 ViewModel
-    viewModel { CompassViewModel(get(), get(), get(), get(), get()) }
+    viewModel { CompassViewModel(get(), get(), get(), get()) }
 }

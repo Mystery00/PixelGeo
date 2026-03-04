@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -27,6 +26,8 @@ import vip.mystery0.pixel.geo.domain.usecase.FormatLocationUseCase
 import vip.mystery0.pixel.geo.presentation.CompassIntent
 import vip.mystery0.pixel.geo.presentation.CompassUiState
 import vip.mystery0.pixel.geo.presentation.GpsSignalQuality
+import vip.mystery0.pixel.geo.util.copyToClipboard
+import vip.mystery0.pixel.geo.util.formatString
 
 /**
  * 坐标数据面板组件
@@ -43,7 +44,6 @@ fun LocationDataPanel(
 ) {
     // 直接实例化（spec 要求，不通过 Koin 注入）
     val formatUseCase = remember { FormatLocationUseCase() }
-    val clipboardManager = LocalClipboardManager.current
     // 按钮颜色配置（@Composable 级别，统一供 4 个按钮复用）
     val buttonColors = ButtonDefaults.buttonColors(
         containerColor = Color(0xFF2C2C2C),
@@ -70,9 +70,9 @@ fun LocationDataPanel(
             // 10dp 圆点（颜色随信号质量变化）
             val dotColor = when (uiState.gpsSignalQuality) {
                 GpsSignalQuality.EXCELLENT -> Color(0xFF4CAF50)  // 绿色
-                GpsSignalQuality.GOOD      -> Color(0xFFFFC107)  // 黄色
-                GpsSignalQuality.POOR      -> Color(0xFFF44336)  // 红色
-                GpsSignalQuality.NONE      -> Color.Gray
+                GpsSignalQuality.GOOD -> Color(0xFFFFC107)  // 黄色
+                GpsSignalQuality.POOR -> Color(0xFFF44336)  // 红色
+                GpsSignalQuality.NONE -> Color.Gray
             }
             Canvas(modifier = Modifier.size(10.dp)) {
                 drawCircle(color = dotColor)
@@ -80,7 +80,7 @@ fun LocationDataPanel(
 
             // 精度文字
             val accuracyText = if (uiState.location != null) {
-                "精度: %.1f m".format(uiState.location.horizontalAccuracy)
+                formatString("精度: %.1f m", uiState.location.horizontalAccuracy)
             } else {
                 "无 GPS 信号"
             }
@@ -96,11 +96,17 @@ fun LocationDataPanel(
         if (uiState.location != null) {
             CoordinateRow(
                 label = "纬度",
-                value = formatUseCase.formatLatitude(uiState.location.latitude, uiState.coordinateFormat)
+                value = formatUseCase.formatLatitude(
+                    uiState.location.latitude,
+                    uiState.coordinateFormat
+                )
             )
             CoordinateRow(
                 label = "经度",
-                value = formatUseCase.formatLongitude(uiState.location.longitude, uiState.coordinateFormat)
+                value = formatUseCase.formatLongitude(
+                    uiState.location.longitude,
+                    uiState.coordinateFormat
+                )
             )
             CoordinateRow(
                 label = "海拔",
@@ -147,7 +153,7 @@ fun LocationDataPanel(
             Button(
                 onClick = {
                     val nextFormat = when (uiState.coordinateFormat) {
-                        CoordinateFormat.DD  -> CoordinateFormat.DMS
+                        CoordinateFormat.DD -> CoordinateFormat.DMS
                         CoordinateFormat.DMS -> CoordinateFormat.DD
                     }
                     onIntent(CompassIntent.ToggleCoordinateFormat(nextFormat))
@@ -179,7 +185,7 @@ fun LocationDataPanel(
                             appendLine(lon)
                             append(alt)
                         }
-                        clipboardManager.setText(AnnotatedString(text))
+                        copyToClipboard(AnnotatedString(text))
                     }
                 },
                 enabled = uiState.location != null,
