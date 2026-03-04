@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -44,13 +47,6 @@ fun LocationDataPanel(
 ) {
     // 直接实例化（spec 要求，不通过 Koin 注入）
     val formatUseCase = remember { FormatLocationUseCase() }
-    // 按钮颜色配置（@Composable 级别，统一供 4 个按钮复用）
-    val buttonColors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        disabledContainerColor = MaterialTheme.colorScheme.surface,
-        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-    )
 
     Column(
         modifier = Modifier
@@ -123,92 +119,95 @@ fun LocationDataPanel(
             )
         }
 
-        // ── 3. 操作按钮行 ──────────────────────────────────────────────
-        Row(
+        // ── 3. 操作按钮区 ──────────────────────────────────────────────
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 真北/磁北切换按钮
-            Button(
-                onClick = {
-                    val nextMode = if (uiState.northMode == NorthMode.TRUE_NORTH) {
-                        NorthMode.MAGNETIC_NORTH
-                    } else {
-                        NorthMode.TRUE_NORTH
-                    }
-                    onIntent(CompassIntent.ToggleNorthMode(nextMode))
-                },
-                colors = buttonColors,
-                modifier = Modifier.weight(1f)
+            // 第一行：切换选项组（SegmentedButton）
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = if (uiState.northMode == NorthMode.TRUE_NORTH) "真北" else "磁北",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                // 真北 / 磁北
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+                    SegmentedButton(
+                        selected = uiState.northMode == NorthMode.TRUE_NORTH,
+                        onClick = { onIntent(CompassIntent.ToggleNorthMode(NorthMode.TRUE_NORTH)) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    ) {
+                        Text(text = "真北", style = MaterialTheme.typography.bodySmall)
+                    }
+                    SegmentedButton(
+                        selected = uiState.northMode == NorthMode.MAGNETIC_NORTH,
+                        onClick = { onIntent(CompassIntent.ToggleNorthMode(NorthMode.MAGNETIC_NORTH)) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    ) {
+                        Text(text = "磁北", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+                // DD / DMS 坐标格式
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+                    SegmentedButton(
+                        selected = uiState.coordinateFormat == CoordinateFormat.DD,
+                        onClick = { onIntent(CompassIntent.ToggleCoordinateFormat(CoordinateFormat.DD)) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    ) {
+                        Text(text = "DD", style = MaterialTheme.typography.bodySmall)
+                    }
+                    SegmentedButton(
+                        selected = uiState.coordinateFormat == CoordinateFormat.DMS,
+                        onClick = { onIntent(CompassIntent.ToggleCoordinateFormat(CoordinateFormat.DMS)) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    ) {
+                        Text(text = "DMS", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             }
 
-            // DD/DMS 坐标格式切换按钮
-            Button(
-                onClick = {
-                    val nextFormat = when (uiState.coordinateFormat) {
-                        CoordinateFormat.DD -> CoordinateFormat.DMS
-                        CoordinateFormat.DMS -> CoordinateFormat.DD
-                    }
-                    onIntent(CompassIntent.ToggleCoordinateFormat(nextFormat))
-                },
-                colors = buttonColors,
-                modifier = Modifier.weight(1f)
+            // 第二行：操作按钮（复制为次要操作，分享为主要操作）
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = uiState.coordinateFormat.name,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            // 复制按钮（由 UI 层直接操作剪贴板，不发送 Intent）
-            Button(
-                onClick = {
-                    if (uiState.location != null) {
-                        val lat = formatUseCase.formatLatitude(
-                            uiState.location.latitude,
-                            uiState.coordinateFormat
-                        )
-                        val lon = formatUseCase.formatLongitude(
-                            uiState.location.longitude,
-                            uiState.coordinateFormat
-                        )
-                        val alt = formatUseCase.formatAltitude(uiState.location.altitude)
-                        val text = buildString {
-                            appendLine(lat)
-                            appendLine(lon)
-                            append(alt)
+                // 复制按钮（由 UI 层直接操作剪贴板，不发送 Intent）
+                FilledTonalButton(
+                    onClick = {
+                        if (uiState.location != null) {
+                            val lat = formatUseCase.formatLatitude(
+                                uiState.location.latitude,
+                                uiState.coordinateFormat
+                            )
+                            val lon = formatUseCase.formatLongitude(
+                                uiState.location.longitude,
+                                uiState.coordinateFormat
+                            )
+                            val alt = formatUseCase.formatAltitude(uiState.location.altitude)
+                            val text = buildString {
+                                appendLine(lat)
+                                appendLine(lon)
+                                append(alt)
+                            }
+                            copyToClipboard(AnnotatedString(text))
                         }
-                        copyToClipboard(AnnotatedString(text))
-                    }
-                },
-                enabled = uiState.location != null,
-                colors = buttonColors,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "复制",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+                    },
+                    enabled = uiState.location != null,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "复制", style = MaterialTheme.typography.bodySmall)
+                }
 
-            // 分享按钮
-            Button(
-                onClick = { onIntent(CompassIntent.ShareCoordinates) },
-                enabled = uiState.location != null,
-                colors = buttonColors,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "分享",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                // 分享按钮（主要操作）
+                Button(
+                    onClick = { onIntent(CompassIntent.ShareCoordinates) },
+                    enabled = uiState.location != null,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "分享", style = MaterialTheme.typography.bodySmall)
+                }
             }
         }
     }
