@@ -23,8 +23,14 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import vip.mystery0.pixel.geo.util.formatString
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -68,6 +74,15 @@ fun CompassCanvas(
 
     // Canvas DrawScope 无法访问 MaterialTheme，提前在 Composable 层取色
     val colorScheme = MaterialTheme.colorScheme
+
+    val textMeasurer = rememberTextMeasurer()
+    // 刻度数字样式：普通刻度用辅助色，0° 用主色（与北方刻度一致）
+    val labelTextStyle = TextStyle(
+        fontSize = 13.sp,
+        fontFamily = FontFamily.Monospace,
+        color = colorScheme.onSurfaceVariant
+    )
+    val northLabelTextStyle = labelTextStyle.copy(color = colorScheme.primary)
 
     Column(
         modifier = modifier,
@@ -138,6 +153,29 @@ fun CompassCanvas(
                 strokeWidth = northTickWidthPx,
                 cap = StrokeCap.Round
             )
+
+            // 刻度数字（每 30° 一个，紧贴主刻度内侧，随刻度方向旋转）
+            val labelMarginPx = 6.dp.toPx()
+            val labelRadiusPx = edgeRadiusPx - northTickLengthPx - labelMarginPx
+            for (angle in 0 until 360 step 30) {
+                val style = if (angle == 0) northLabelTextStyle else labelTextStyle
+                val measured = textMeasurer.measure(text = angle.toString(), style = style)
+                val angleRad = angle * PI / 180.0
+                val textCenterX = center.x + labelRadiusPx * sin(angleRad).toFloat()
+                val textCenterY = center.y - labelRadiusPx * cos(angleRad).toFloat()
+                withTransform({
+                    translate(left = textCenterX, top = textCenterY)
+                    rotate(degrees = angle.toFloat(), pivot = Offset.Zero)
+                }) {
+                    drawText(
+                        textLayoutResult = measured,
+                        topLeft = Offset(
+                            x = -measured.size.width / 2f,
+                            y = -measured.size.height / 2f
+                        )
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -167,7 +205,7 @@ fun CompassCanvas(
             } else {
                 // 正常显示：三位数角度 + 度符号
                 Text(
-                    text = "%03.0f°".format(heading ?: animatedHeading),
+                    text = formatString("%03.0f°", heading ?: animatedHeading),
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = FontFamily.Monospace
