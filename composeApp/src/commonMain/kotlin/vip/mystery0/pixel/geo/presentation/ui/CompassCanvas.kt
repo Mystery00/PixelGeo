@@ -7,9 +7,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,10 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -89,127 +91,238 @@ fun CompassCanvas(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 表盘：整体旋转实现指针效果（表盘转，正上方始终是北方）
-        Canvas(
-            modifier = Modifier
-                .size(280.dp)
-                .rotate(-animatedHeading)
+        // 表盘：外层固定指示器 + 旋转内部刻度和文字
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val radius = size.minDimension / 2f
+            Canvas(
+                modifier = Modifier
+                    .size(340.dp)
+            ) {
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val radius = size.minDimension / 2f
 
-            // I1 修复：预计算所有像素值，避免在循环和绘制调用中重复转换
-            val borderWidthPx = 2.dp.toPx()
-            val tickMarginPx = 4.dp.toPx()
-            val mainTickLengthPx = 20.dp.toPx()
-            val subTickLengthPx = 10.dp.toPx()
-            val mainTickWidthPx = 2.dp.toPx()
-            val subTickWidthPx = 1.dp.toPx()
-            val northTickLengthPx = 30.dp.toPx()
-            val northTickWidthPx = 3.dp.toPx()
-            val edgeRadiusPx = radius - tickMarginPx
+                // Constants for the ticks
+                val tickMarginPx = 30.dp.toPx() // Keep ticks inside to leave room for outer text
+                val edgeRadiusPx = radius - tickMarginPx
 
-            // 外圆框
-            drawCircle(
-                color = colorScheme.outline,
-                radius = radius - borderWidthPx,
-                center = center,
-                style = Stroke(width = borderWidthPx)
-            )
+                val longTickLengthPx = 18.dp.toPx()
+                val mediumTickLengthPx = 12.dp.toPx()
+                val shortTickLengthPx = 8.dp.toPx()
 
-            // 刻度线：每 10° 一短线，每 30° 一长线
-            for (angle in 0 until 360 step 10) {
-                // 跳过 0°，北方由专用红色刻度处理，避免刻度线重叠
-                if (angle == 0) continue
-
-                val isMain = angle % 30 == 0
-                val lineLength = if (isMain) mainTickLengthPx else subTickLengthPx
-                val strokeWidth = if (isMain) mainTickWidthPx else subTickWidthPx
-                val lineColor = if (isMain) colorScheme.outline else colorScheme.outlineVariant
-
-                val angleRad = angle * PI / 180.0
-                val startRadius = edgeRadiusPx - lineLength
-
+                // --- 1. Draw Fixed Indicator (Top White Line) ---
+                val indicatorLengthPx = 35.dp.toPx()
                 drawLine(
-                    color = lineColor,
-                    start = Offset(
-                        center.x + startRadius * sin(angleRad).toFloat(),
-                        center.y - startRadius * cos(angleRad).toFloat()
-                    ),
-                    end = Offset(
-                        center.x + edgeRadiusPx * sin(angleRad).toFloat(),
-                        center.y - edgeRadiusPx * cos(angleRad).toFloat()
-                    ),
-                    strokeWidth = strokeWidth,
+                    color = colorScheme.onBackground,
+                    start = Offset(center.x, center.y - radius),
+                    end = Offset(center.x, center.y - radius + indicatorLengthPx),
+                    strokeWidth = 3.dp.toPx(),
                     cap = StrokeCap.Round
                 )
-            }
 
-            // 北方（0°）长刻度，突出标识
-            drawLine(
-                color = colorScheme.primary,
-                start = Offset(center.x, center.y - (edgeRadiusPx - northTickLengthPx)),
-                end = Offset(center.x, center.y - edgeRadiusPx),
-                strokeWidth = northTickWidthPx,
-                cap = StrokeCap.Round
-            )
+                // --- 2. Central Crosshair & Circle ---
+                val innerCircleRadius = 40.dp.toPx()
+                val crosshairLength = 55.dp.toPx()
+                // Dark translucent circle in the middle
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.05f),
+                    radius = innerCircleRadius,
+                    center = center
+                )
+                // Crosshair lines
+                drawLine(
+                    color = Color.White.copy(alpha = 0.3f),
+                    start = Offset(center.x - crosshairLength, center.y),
+                    end = Offset(center.x + crosshairLength, center.y),
+                    strokeWidth = 1.dp.toPx()
+                )
+                drawLine(
+                    color = Color.White.copy(alpha = 0.3f),
+                    start = Offset(center.x, center.y - crosshairLength),
+                    end = Offset(center.x, center.y + crosshairLength),
+                    strokeWidth = 1.dp.toPx()
+                )
 
-            // 刻度数字（每 30° 一个，紧贴主刻度内侧，随刻度方向旋转）
-            val labelMarginPx = 6.dp.toPx()
-            val labelRadiusPx = edgeRadiusPx - northTickLengthPx - labelMarginPx
-            for (angle in 0 until 360 step 30) {
-                val style = if (angle == 0) northLabelTextStyle else labelTextStyle
-                val measured = textMeasurer.measure(text = angle.toString(), style = style)
-                val angleRad = angle * PI / 180.0
-                val textCenterX = center.x + labelRadiusPx * sin(angleRad).toFloat()
-                val textCenterY = center.y - labelRadiusPx * cos(angleRad).toFloat()
+                // --- 3. Rotating Dial (Ticks and Texts) ---
                 withTransform({
-                    translate(left = textCenterX, top = textCenterY)
-                    rotate(degrees = angle.toFloat(), pivot = Offset.Zero)
+                    rotate(-animatedHeading, center)
                 }) {
-                    drawText(
-                        textLayoutResult = measured,
-                        topLeft = Offset(
-                            x = -measured.size.width / 2f,
-                            y = -measured.size.height / 2f
+                    // Draw Ticks (every 2 degrees)
+                    for (angle in 0 until 360 step 2) {
+                        val isLong = angle % 30 == 0
+                        val isMedium = angle % 10 == 0 && !isLong
+
+                        val lineLength = when {
+                            isLong -> longTickLengthPx
+                            isMedium -> mediumTickLengthPx
+                            else -> shortTickLengthPx
+                        }
+
+                        val strokeWidth = if (isLong) 2.dp.toPx() else 1.dp.toPx()
+
+                        // Default color is white for ticks, except the North marker which we'll handle specially
+                        val lineColor = colorScheme.onBackground
+
+                        val angleRad = angle * PI / 180.0
+
+                        // We do NOT draw the 0 degree line here, we draw a triangle instead
+                        if (angle == 0) continue
+
+                        val startRadius = edgeRadiusPx
+                        val endRadius = edgeRadiusPx - lineLength
+
+                        drawLine(
+                            color = lineColor,
+                            start = Offset(
+                                center.x + startRadius * sin(angleRad).toFloat(),
+                                center.y - startRadius * cos(angleRad).toFloat()
+                            ),
+                            end = Offset(
+                                center.x + endRadius * sin(angleRad).toFloat(),
+                                center.y - endRadius * cos(angleRad).toFloat()
+                            ),
+                            strokeWidth = strokeWidth,
+                            cap = StrokeCap.Round
                         )
+                    }
+
+                    // North Triangle (0 degrees)
+                    val triangleWidth = 12.dp.toPx()
+                    val triangleHeight = 14.dp.toPx()
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        val topY = center.y - edgeRadiusPx
+                        moveTo(center.x, topY)
+                        lineTo(center.x - triangleWidth / 2f, topY + triangleHeight)
+                        lineTo(center.x + triangleWidth / 2f, topY + triangleHeight)
+                        close()
+                    }
+                    drawPath(
+                        path = path,
+                        color = colorScheme.primary
                     )
+
+                    // Draw Outer Degree Numbers (0, 30, 60...)
+                    val numberRadiusPx = edgeRadiusPx + 16.dp.toPx()
+                    for (angle in 0 until 360 step 30) {
+                        // Skip 0 for numbers, or maybe leave it? The iOS design has 0 near the triangle
+                        // Actually the image shows '0' next to the triangle
+                        val text = angle.toString()
+                        val measured = textMeasurer.measure(text = text, style = labelTextStyle)
+                        val angleRad = angle * PI / 180.0
+
+                        val textCenterX = center.x + numberRadiusPx * sin(angleRad).toFloat()
+                        val textCenterY = center.y - numberRadiusPx * cos(angleRad).toFloat()
+
+                        // To keep text upright, we counter-rotate it by the same angle it was rotated globally.
+                        // Wait, the numbers in the dial actually stay upright relative to the phone? No, the image shows
+                        // they form a circle but they are standing upright. 
+                        // Actually, if we reverse the `-animatedHeading` and apply the `angle`, let's just draw them rotated?
+                        // If we look at the image, '30' is upright, '60' is upright. 
+                        withTransform({
+                            translate(left = textCenterX, top = textCenterY)
+                            // Counter-rotate the Canvas so the text is always upright relative to screen
+                            rotate(animatedHeading, Offset.Zero)
+                        }) {
+                            drawText(
+                                textLayoutResult = measured,
+                                topLeft = Offset(
+                                    x = -measured.size.width / 2f,
+                                    y = -measured.size.height / 2f
+                                )
+                            )
+                        }
+                    }
+
+                    // Draw Inner Cardinal Directions (北, 东, 南, 西)
+                    val cardinalRadiusPx = edgeRadiusPx - longTickLengthPx - 30.dp.toPx()
+                    val cardinals = mapOf(0 to "北", 90 to "东", 180 to "南", 270 to "西")
+
+                    val cardinalTextStyle = TextStyle(
+                        fontSize = 20.sp,
+                        color = colorScheme.onBackground,
+                        fontFamily = FontFamily.Default
+                    )
+
+                    for ((angle, text) in cardinals) {
+                        val measured = textMeasurer.measure(text = text, style = cardinalTextStyle)
+                        val angleRad = angle * PI / 180.0
+
+                        val textCenterX = center.x + cardinalRadiusPx * sin(angleRad).toFloat()
+                        val textCenterY = center.y - cardinalRadiusPx * cos(angleRad).toFloat()
+
+                        withTransform({
+                            translate(left = textCenterX, top = textCenterY)
+                            // Counter-rotate so text is always upright
+                            rotate(animatedHeading, Offset.Zero)
+                        }) {
+                            drawText(
+                                textLayoutResult = measured,
+                                topLeft = Offset(
+                                    x = -measured.size.width / 2f,
+                                    y = -measured.size.height / 2f
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        // I4 修复：固定最小高度，避免 isWaitingForGps 切换时文字区域高度跳变
+        // 当前方位角显示，或真北等待态提示
         Box(
-            modifier = Modifier.heightIn(min = 72.dp),
+            modifier = Modifier.heightIn(min = 80.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            // 当前方位角显示，或真北等待态提示
             if (isWaitingForGps) {
-                // 真北等待态：表盘冻结，显示占位符和提示
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "--",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = FontFamily.Monospace
+                        style = MaterialTheme.typography.displayMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "正在获取 GPS 信号…",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
-                // 正常显示：三位数角度 + 度符号
-                Text(
-                    text = formatString("%03.0f°", heading ?: animatedHeading),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontFamily = FontFamily.Monospace
-                )
+                val currentHeading = heading ?: animatedHeading
+                val directionText = when (currentHeading) {
+                    in 337.5..360.0, in 0.0..22.5 -> "北"
+                    in 22.5..67.5 -> "东北"
+                    in 67.5..112.5 -> "东"
+                    in 112.5..157.5 -> "东南"
+                    in 157.5..202.5 -> "南"
+                    in 202.5..247.5 -> "西南"
+                    in 247.5..292.5 -> "西"
+                    in 292.5..337.5 -> "西北"
+                    else -> ""
+                }
+
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = formatString("%.0f°", currentHeading),
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 64.sp,
+                            fontFeatureSettings = "tnum"
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = " $directionText",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(bottom = 12.dp) // Align slightly above the baseline of the large digits
+                    )
+                }
             }
         }
     }

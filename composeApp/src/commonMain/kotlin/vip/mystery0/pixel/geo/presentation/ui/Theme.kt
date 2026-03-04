@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
  * - error                      → GPS 信号较弱（红色）
  */
 private val PixelGeoDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFF4444),
+    primary = Color(0xFFFF2424), // Brighter red for the North pointer
     onPrimary = Color(0xFF690005),
     primaryContainer = Color(0xFF93000A),
     onPrimaryContainer = Color(0xFFFFDAD6),
@@ -39,10 +39,10 @@ private val PixelGeoDarkColorScheme = darkColorScheme(
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
 
-    background = Color(0xFF000000),
+    background = Color(0xFF101010), // Softer dark background, close to iOS pure dark but slightly lifted
     onBackground = Color(0xFFFFFFFF),
 
-    surface = Color(0xFF1A1A1A),
+    surface = Color(0xFF1A1A1A), // Keeping the surface at 1A1A1A for a slight lift
     onSurface = Color(0xFFFFFFFF),
     surfaceVariant = Color(0xFF2C2C2C),
     onSurfaceVariant = Color(0xFFAAAAAA),

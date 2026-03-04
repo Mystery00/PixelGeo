@@ -1,12 +1,17 @@
 package vip.mystery0.pixel.geo.presentation.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
@@ -50,14 +55,26 @@ fun LocationDataPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // --- 0. 抽屉指示器 (Drag Handle) ---
+        Box(
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .width(36.dp)
+                .height(4.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(2.dp)
+                )
+        )
+
         // ── 1. GPS 信号质量指示器行 ──────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -80,9 +97,8 @@ fun LocationDataPanel(
             }
             Text(
                 text = accuracyText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = FontFamily.Monospace
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -227,13 +243,13 @@ private fun CoordinateRow(label: String, value: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "$label：",
-            style = MaterialTheme.typography.bodyMedium,
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily.Monospace
         )
