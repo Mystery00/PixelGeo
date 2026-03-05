@@ -19,36 +19,37 @@ import androidx.compose.ui.graphics.Color
  * - error                      → GPS 信号较弱（红色）
  */
 private val PixelGeoDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFF2424), // Brighter red for the North pointer
-    onPrimary = Color(0xFF690005),
-    primaryContainer = Color(0xFF93000A),
-    onPrimaryContainer = Color(0xFFFFDAD6),
+    primary = Color(0xFFA8C7FA), // Quiet Tech Blue for primary actions/pointer
+    onPrimary = Color(0xFF062E6F),
+    primaryContainer = Color(0xFF284777),
+    onPrimaryContainer = Color(0xFFD3E3FD),
 
-    secondary = Color(0xFFFFC107),
-    onSecondary = Color(0xFF3E2800),
-    secondaryContainer = Color(0xFF593E00),
-    onSecondaryContainer = Color(0xFFFFDFA6),
+    secondary = Color(0xFFC2C7CF),
+    onSecondary = Color(0xFF2C3137),
+    secondaryContainer = Color(0xFF42474E),
+    onSecondaryContainer = Color(0xFFDEE3EB),
 
-    tertiary = Color(0xFF4CAF50),
-    onTertiary = Color(0xFF003910),
-    tertiaryContainer = Color(0xFF00531A),
-    onTertiaryContainer = Color(0xFF5DFC6C),
+    // Used for Warning/Accuracy prompts (Soft yellow/amber)
+    tertiary = Color(0xFFF2C044),
+    onTertiary = Color(0xFF402D00),
+    tertiaryContainer = Color(0xFF5B4300),
+    onTertiaryContainer = Color(0xFFFFDF9B),
 
-    error = Color(0xFFF44336),
+    error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
 
-    background = Color(0xFF101010), // Softer dark background, close to iOS pure dark but slightly lifted
-    onBackground = Color(0xFFFFFFFF),
+    background = Color(0xFF000000), // Pure black for deep immersive background
+    onBackground = Color(0xFFE3E2E6),
 
-    surface = Color(0xFF1A1A1A), // Keeping the surface at 1A1A1A for a slight lift
-    onSurface = Color(0xFFFFFFFF),
-    surfaceVariant = Color(0xFF2C2C2C),
-    onSurfaceVariant = Color(0xFFAAAAAA),
+    surface = Color(0xFF111318), // Slightly elevated from pure black
+    onSurface = Color(0xFFE3E2E6),
+    surfaceVariant = Color(0xFF44474E),
+    onSurfaceVariant = Color(0xFFC4C6D0),
 
-    outline = Color(0xFFFFFFFF),
-    outlineVariant = Color(0xFF808080),
+    outline = Color(0xFF8E9099),
+    outlineVariant = Color(0xFF44474E),
 )
 
 @Composable

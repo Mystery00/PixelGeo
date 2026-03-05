@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -24,6 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -80,9 +88,9 @@ fun LocationDataPanel(
         ) {
             // 10dp 圆点（颜色随信号质量变化）
             val dotColor = when (uiState.gpsSignalQuality) {
-                GpsSignalQuality.EXCELLENT -> Color(0xFF4CAF50)  // 绿色
-                GpsSignalQuality.GOOD -> Color(0xFFFFC107)  // 黄色
-                GpsSignalQuality.POOR -> Color(0xFFF44336)  // 红色
+                GpsSignalQuality.EXCELLENT -> MaterialTheme.colorScheme.tertiary
+                GpsSignalQuality.GOOD -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.7f)
+                GpsSignalQuality.POOR -> MaterialTheme.colorScheme.error
                 GpsSignalQuality.NONE -> Color.Gray
             }
             Canvas(modifier = Modifier.size(10.dp)) {
@@ -109,18 +117,21 @@ fun LocationDataPanel(
                 value = formatUseCase.formatLatitude(
                     uiState.location.latitude,
                     uiState.coordinateFormat
-                )
+                ),
+                isAltitude = false
             )
             CoordinateRow(
                 label = "经度",
                 value = formatUseCase.formatLongitude(
                     uiState.location.longitude,
                     uiState.coordinateFormat
-                )
+                ),
+                isAltitude = false
             )
             CoordinateRow(
                 label = "海拔",
-                value = formatUseCase.formatAltitude(uiState.location.altitude)
+                value = formatUseCase.formatAltitude(uiState.location.altitude),
+                isAltitude = true
             )
         } else {
             Text(
@@ -150,14 +161,16 @@ fun LocationDataPanel(
                     SegmentedButton(
                         selected = uiState.northMode == NorthMode.TRUE_NORTH,
                         onClick = { onIntent(CompassIntent.ToggleNorthMode(NorthMode.TRUE_NORTH)) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Text(text = "真北", style = MaterialTheme.typography.bodySmall)
                     }
                     SegmentedButton(
                         selected = uiState.northMode == NorthMode.MAGNETIC_NORTH,
                         onClick = { onIntent(CompassIntent.ToggleNorthMode(NorthMode.MAGNETIC_NORTH)) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Text(text = "磁北", style = MaterialTheme.typography.bodySmall)
                     }
@@ -168,14 +181,16 @@ fun LocationDataPanel(
                     SegmentedButton(
                         selected = uiState.coordinateFormat == CoordinateFormat.DD,
                         onClick = { onIntent(CompassIntent.ToggleCoordinateFormat(CoordinateFormat.DD)) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Text(text = "DD", style = MaterialTheme.typography.bodySmall)
                     }
                     SegmentedButton(
                         selected = uiState.coordinateFormat == CoordinateFormat.DMS,
                         onClick = { onIntent(CompassIntent.ToggleCoordinateFormat(CoordinateFormat.DMS)) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Text(text = "DMS", style = MaterialTheme.typography.bodySmall)
                     }
@@ -209,7 +224,11 @@ fun LocationDataPanel(
                         }
                     },
                     enabled = uiState.location != null,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 ) {
                     Text(text = "复制", style = MaterialTheme.typography.bodySmall)
                 }
@@ -232,9 +251,10 @@ fun LocationDataPanel(
  *
  * @param label 左侧标签（灰色）
  * @param value 右侧数值（白色，等宽字体）
+ * @param isAltitude 是否为海拔数据（如果是，则显示代表海拔的 icon）
  */
 @Composable
-private fun CoordinateRow(label: String, value: String) {
+private fun CoordinateRow(label: String, value: String, isAltitude: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,11 +262,22 @@ private fun CoordinateRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = if (isAltitude) TerrainIcon else LocationOnIcon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
@@ -255,3 +286,70 @@ private fun CoordinateRow(label: String, value: String) {
         )
     }
 }
+
+private val LocationOnIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "LocationOn",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(
+            fill = SolidColor(Color.Black),
+            fillAlpha = 1.0f,
+            stroke = null,
+            strokeAlpha = 1.0f,
+            strokeLineWidth = 1.0f,
+            strokeLineCap = StrokeCap.Butt,
+            strokeLineJoin = StrokeJoin.Miter,
+            strokeLineMiter = 1.0f,
+            pathFillType = PathFillType.NonZero
+        ) {
+            moveTo(12.0f, 2.0f)
+            curveTo(8.13f, 2.0f, 5.0f, 5.13f, 5.0f, 9.0f)
+            curveToRelative(0.0f, 5.25f, 7.0f, 13.0f, 7.0f, 13.0f)
+            curveToRelative(0.0f, 0.0f, 7.0f, -7.75f, 7.0f, -13.0f)
+            curveToRelative(0.0f, -3.87f, -3.13f, -7.0f, -7.0f, -7.0f)
+            close()
+            moveTo(12.0f, 11.5f)
+            curveToRelative(-1.38f, 0.0f, -2.5f, -1.12f, -2.5f, -2.5f)
+            reflectiveCurveToRelative(1.12f, -2.5f, 2.5f, -2.5f)
+            reflectiveCurveToRelative(2.5f, 1.12f, 2.5f, 2.5f)
+            reflectiveCurveToRelative(-1.12f, 2.5f, -2.5f, 2.5f)
+            close()
+        }
+    }.build()
+
+private val TerrainIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "Terrain",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(
+            fill = SolidColor(Color.Black),
+            fillAlpha = 1.0f,
+            stroke = null,
+            strokeAlpha = 1.0f,
+            strokeLineWidth = 1.0f,
+            strokeLineCap = StrokeCap.Butt,
+            strokeLineJoin = StrokeJoin.Miter,
+            strokeLineMiter = 1.0f,
+            pathFillType = PathFillType.NonZero
+        ) {
+            moveTo(14.0f, 6.0f)
+            lineToRelative(-3.75f, 5.0f)
+            lineToRelative(2.85f, 3.8f)
+            lineToRelative(-1.6f, 1.2f)
+            lineTo(14.0f, 13.0f)
+            lineToRelative(5.0f, 7.0f)
+            lineTo(2.0f, 20.0f)
+            lineToRelative(8.0f, -11.0f)
+            lineToRelative(4.0f, 5.0f)
+            lineToRelative(0.0f, -8.0f)
+            close()
+        }
+    }.build()

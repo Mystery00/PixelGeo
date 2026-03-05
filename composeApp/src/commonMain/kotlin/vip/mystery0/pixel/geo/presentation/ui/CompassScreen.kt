@@ -1,6 +1,5 @@
 package vip.mystery0.pixel.geo.presentation.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -96,7 +94,7 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
         Surface(
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
             color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+            tonalElevation = 12.dp
         ) {
             Column {
                 LocationDataPanel(
