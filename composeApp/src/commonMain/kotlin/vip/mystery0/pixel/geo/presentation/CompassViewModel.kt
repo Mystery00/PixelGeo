@@ -32,6 +32,13 @@ class CompassViewModel(
             }
         }
 
+        // 订阅姿态数据（俯仰、翻滚）
+        viewModelScope.launch {
+            compassSensor.attitudeData.collect { attitude ->
+                _uiState.update { it.copy(attitude = attitude) }
+            }
+        }
+
         // 订阅位置数据，同步计算 GPS 信号质量
         viewModelScope.launch {
             locationSensor.locationData.collect { location ->

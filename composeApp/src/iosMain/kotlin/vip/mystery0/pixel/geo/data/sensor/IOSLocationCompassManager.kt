@@ -9,7 +9,10 @@ import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationManager
 import platform.CoreLocation.CLLocationManagerDelegateProtocol
 import platform.CoreLocation.kCLLocationAccuracyBest
+import platform.CoreMotion.CMMotionManager
+import platform.Foundation.NSOperationQueue
 import platform.darwin.NSObject
+import vip.mystery0.pixel.geo.domain.model.Attitude
 import vip.mystery0.pixel.geo.domain.model.CompassHeading
 import vip.mystery0.pixel.geo.domain.model.LocationModel
 
@@ -18,9 +21,13 @@ import vip.mystery0.pixel.geo.domain.model.LocationModel
 class IOSLocationCompassManager : CompassSensor, LocationSensor {
 
     private val locationManager = CLLocationManager()
+    private val motionManager = CMMotionManager()
 
     private val _headingData = MutableStateFlow(CompassHeading(0f, null))
     override val headingData: Flow<CompassHeading> = _headingData.asStateFlow()
+
+    private val _attitudeData = MutableStateFlow(Attitude(0f, 0f))
+    override val attitudeData: Flow<Attitude> = _attitudeData.asStateFlow()
 
     private val _locationData = MutableStateFlow<LocationModel?>(null)
     override val locationData: Flow<LocationModel> = _locationData.filterNotNull()
@@ -67,10 +74,26 @@ class IOSLocationCompassManager : CompassSensor, LocationSensor {
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
         locationManager.startUpdatingHeading()
+
+        if (motionManager.isDeviceMotionAvailable()) {
+            // 设置采样率，例如 60Hz (约 0.016 秒)
+            motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
+            motionManager.startDeviceMotionUpdatesToQueue(NSOperationQueue.mainQueue) { motion, error ->
+                if (error == null && motion != null) {
+                    val pitch = motion.attitude.pitch * 180.0 / kotlin.math.PI
+                    val roll = motion.attitude.roll * 180.0 / kotlin.math.PI
+                    _attitudeData.value = Attitude(pitch = pitch.toFloat(), roll = roll.toFloat())
+                }
+            }
+        }
     }
 
     override fun stop() {
         locationManager.stopUpdatingLocation()
         locationManager.stopUpdatingHeading()
+
+        if (motionManager.isDeviceMotionActive()) {
+            motionManager.stopDeviceMotionUpdates()
+        }
     }
 }

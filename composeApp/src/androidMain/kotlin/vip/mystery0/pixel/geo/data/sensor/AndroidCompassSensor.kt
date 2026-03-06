@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import vip.mystery0.pixel.geo.domain.model.Attitude
 import vip.mystery0.pixel.geo.domain.model.CompassHeading
 import vip.mystery0.pixel.geo.domain.model.LocationModel
 
@@ -33,6 +34,9 @@ class AndroidCompassSensor(
 
     private val _headingData = MutableStateFlow(CompassHeading(0f, null))
     override val headingData: Flow<CompassHeading> = _headingData.asStateFlow()
+
+    private val _attitudeData = MutableStateFlow(Attitude(0f, 0f))
+    override val attitudeData: Flow<Attitude> = _attitudeData.asStateFlow()
 
     private val _locationData = MutableStateFlow<LocationModel?>(null)
     override val locationData: Flow<LocationModel> = _locationData.filterNotNull()
@@ -67,6 +71,12 @@ class AndroidCompassSensor(
             }
 
             _headingData.value = CompassHeading(currentMagneticHeading, trueHeading)
+
+            // 发射姿态数据 (Pitch 和 Roll)
+            // orientation[1] 是 pitch (x-axis), orientation[2] 是 roll (y-axis)，单位是弧度
+            val pitchDegrees = Math.toDegrees(orientation[1].toDouble()).toFloat()
+            val rollDegrees = Math.toDegrees(orientation[2].toDouble()).toFloat()
+            _attitudeData.value = Attitude(pitch = pitchDegrees, roll = rollDegrees)
         }
 
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}

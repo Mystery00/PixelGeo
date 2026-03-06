@@ -1,5 +1,6 @@
 package vip.mystery0.pixel.geo.presentation
 
+import vip.mystery0.pixel.geo.domain.model.Attitude
 import vip.mystery0.pixel.geo.domain.model.CompassHeading
 import vip.mystery0.pixel.geo.domain.model.CoordinateFormat
 import vip.mystery0.pixel.geo.domain.model.LocationModel
@@ -20,5 +21,6 @@ data class CompassUiState(
     val northMode: NorthMode = NorthMode.MAGNETIC_NORTH,
     val coordinateFormat: CoordinateFormat = CoordinateFormat.DD,
     val isLocationPermissionGranted: Boolean = false,
-    val gpsSignalQuality: GpsSignalQuality = GpsSignalQuality.NONE
+    val gpsSignalQuality: GpsSignalQuality = GpsSignalQuality.NONE,
+    val attitude: Attitude? = null
 )

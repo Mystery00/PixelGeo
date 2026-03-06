@@ -86,7 +86,8 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
         ) {
             CompassCanvas(
                 heading = displayHeading,
-                isWaitingForGps = isWaitingForGps
+                isWaitingForGps = isWaitingForGps,
+                attitude = uiState.attitude
             )
         }
 

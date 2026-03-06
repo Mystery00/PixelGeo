@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,14 +27,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import vip.mystery0.pixel.geo.domain.model.Attitude
 import vip.mystery0.pixel.geo.util.formatString
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -44,12 +49,14 @@ import kotlin.math.sin
  * @param isWaitingForGps 是否处于真北等待 GPS 信号状态。
  *   参数约束：[heading] == null 与 [isWaitingForGps] == true 应同步出现；
  *   若 [heading] != null 且 [isWaitingForGps] == true，表盘仍会旋转但文字显示 "--"（不推荐此组合）。
+ * @param attitude 当前设备姿态（俯仰、翻滚）。可以为空（例如权限未授予或仍在加载时）。
  * @param modifier Compose 修饰符，作用于整个组件的根容器
  */
 @Composable
 fun CompassCanvas(
     heading: Float?,
     isWaitingForGps: Boolean,
+    attitude: Attitude?,
     modifier: Modifier = Modifier
 ) {
     // C1 修复：使用累积角度追踪绝对旋转量，避免 360°/0° 边界跨越时动画反转
@@ -62,6 +69,17 @@ fun CompassCanvas(
     val newAccumulated = accumulatedHeadingState.value + delta
     if (newAccumulated != accumulatedHeadingState.value) {
         accumulatedHeadingState.value = newAccumulated
+    }
+
+    // 判断是否绝对水平（俯仰角和翻滚角绝对值都小于 1.0°）
+    val isLevel = attitude != null && abs(attitude.pitch) < 1.0f && abs(attitude.roll) < 1.0f
+
+    // 触觉反馈 (Haptic)
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(isLevel) {
+        if (isLevel) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
     }
 
     // S3 修复：改为无回弹（DampingRatioNoBouncy），工具类指南针不应有回弹效果
@@ -121,28 +139,61 @@ fun CompassCanvas(
                     cap = StrokeCap.Round
                 )
 
-                // --- 2. Central Crosshair & Circle ---
+                // --- 2. Central Crosshair & Circle (牛眼水平仪外圈) ---
                 val innerCircleRadius = 40.dp.toPx()
                 val crosshairLength = 55.dp.toPx()
+
+                // 根据是否水平状态切换颜色
+                val levelColor =
+                    if (isLevel) colorScheme.primary else Color.White.copy(alpha = 0.3f)
+                val targetColor = if (isLevel) colorScheme.primary else colorScheme.onSurfaceVariant
+
                 // Dark translucent circle in the middle
                 drawCircle(
                     color = Color.White.copy(alpha = 0.05f),
                     radius = innerCircleRadius,
                     center = center
                 )
+
                 // Crosshair lines
                 drawLine(
-                    color = Color.White.copy(alpha = 0.3f),
+                    color = targetColor,
                     start = Offset(center.x - crosshairLength, center.y),
                     end = Offset(center.x + crosshairLength, center.y),
-                    strokeWidth = 1.dp.toPx()
+                    strokeWidth = (if (isLevel) 2.dp else 1.dp).toPx()
                 )
                 drawLine(
-                    color = Color.White.copy(alpha = 0.3f),
+                    color = targetColor,
                     start = Offset(center.x, center.y - crosshairLength),
                     end = Offset(center.x, center.y + crosshairLength),
-                    strokeWidth = 1.dp.toPx()
+                    strokeWidth = (if (isLevel) 2.dp else 1.dp).toPx()
                 )
+
+                // --- 2.1 绘制动态气泡 (Dynamic Bubble) ---
+                if (attitude != null) {
+                    val maxRadius = 30.dp.toPx() // 气泡最大偏移半径（保持在内圈中）
+
+                    // 将 roll ([-180, 180]) 映射为 X 偏移，pitch 映射为 Y 偏移
+                    // 灵敏度因子，可以微调。这里使用简单的线性映射：45度即可达到边界
+                    val xOffsetRaw = (attitude.roll / 45f) * maxRadius
+                    val yOffsetRaw = (attitude.pitch / 45f) * maxRadius
+
+                    // 限幅 (Clamp)
+                    val xOffsetClamped = xOffsetRaw.coerceIn(-maxRadius, maxRadius)
+                    val yOffsetClamped = yOffsetRaw.coerceIn(-maxRadius, maxRadius)
+
+                    val bubbleCenter = Offset(
+                        x = center.x + xOffsetClamped,
+                        y = center.y + yOffsetClamped
+                    )
+
+                    val bubbleRadius = 16.dp.toPx() // 白点的大小调大2倍 (8dp -> 16dp)
+                    drawCircle(
+                        color = levelColor,
+                        radius = bubbleRadius,
+                        center = bubbleCenter
+                    )
+                }
 
                 // --- 3. Rotating Dial (Ticks and Texts) ---
                 withTransform({
@@ -304,24 +355,39 @@ fun CompassCanvas(
                     else -> ""
                 }
 
-                Row(
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = formatString("%.0f°", currentHeading),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 64.sp,
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = " $directionText",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(bottom = 12.dp) // Align slightly above the baseline of the large digits
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = formatString("%.0f°", currentHeading),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontSize = 64.sp,
+                                fontFeatureSettings = "tnum"
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = " $directionText",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(bottom = 12.dp) // Align slightly above the baseline of the large digits
+                        )
+                    }
+
+                    // 底部增加水平角度的数字显示
+                    if (attitude != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = formatString(
+                                "水平: %.1f°  翻滚: %.1f°",
+                                abs(attitude.pitch),
+                                abs(attitude.roll)
+                            ),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Monospace
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
