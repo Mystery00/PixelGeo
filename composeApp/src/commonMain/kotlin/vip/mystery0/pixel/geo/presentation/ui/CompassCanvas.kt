@@ -324,7 +324,7 @@ fun CompassCanvas(
 
         // 当前方位角显示，或真北等待态提示
         Box(
-            modifier = Modifier.heightIn(min = 80.dp),
+            modifier = Modifier.heightIn(min = 110.dp),
             contentAlignment = Alignment.TopCenter
         ) {
             if (isWaitingForGps) {

@@ -134,14 +134,9 @@ fun LocationDataPanel(
                 isAltitude = true
             )
         } else {
-            Text(
-                text = "等待定位数据…",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            )
+            CoordinateRow(label = "纬度", value = "--", isAltitude = false)
+            CoordinateRow(label = "经度", value = "--", isAltitude = false)
+            CoordinateRow(label = "海拔", value = "--", isAltitude = true)
         }
 
         // ── 3. 操作按钮区 ──────────────────────────────────────────────
