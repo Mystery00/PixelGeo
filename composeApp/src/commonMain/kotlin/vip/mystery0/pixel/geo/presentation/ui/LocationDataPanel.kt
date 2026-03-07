@@ -32,12 +32,20 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import pixelgeo.composeapp.generated.resources.Res
+import pixelgeo.composeapp.generated.resources.share_text_alt
+import pixelgeo.composeapp.generated.resources.share_text_footer
+import pixelgeo.composeapp.generated.resources.share_text_lat
+import pixelgeo.composeapp.generated.resources.share_text_lon
+import pixelgeo.composeapp.generated.resources.share_text_title
 import vip.mystery0.pixel.geo.domain.model.CoordinateFormat
 import vip.mystery0.pixel.geo.domain.model.NorthMode
 import vip.mystery0.pixel.geo.domain.usecase.FormatLocationUseCase
 import vip.mystery0.pixel.geo.presentation.CompassIntent
 import vip.mystery0.pixel.geo.presentation.CompassUiState
 import vip.mystery0.pixel.geo.presentation.GpsSignalQuality
+import vip.mystery0.pixel.geo.presentation.ShareTextStrings
 import vip.mystery0.pixel.geo.util.copyToClipboard
 import vip.mystery0.pixel.geo.util.formatString
 
@@ -56,6 +64,12 @@ fun LocationDataPanel(
 ) {
     // 直接实例化（spec 要求，不通过 Koin 注入）
     val formatUseCase = remember { FormatLocationUseCase() }
+
+    val stringTitle = stringResource(Res.string.share_text_title)
+    val stringLat = stringResource(Res.string.share_text_lat)
+    val stringLon = stringResource(Res.string.share_text_lon)
+    val stringAlt = stringResource(Res.string.share_text_alt)
+    val stringFooter = stringResource(Res.string.share_text_footer)
 
     Column(
         modifier = Modifier
@@ -199,8 +213,11 @@ fun LocationDataPanel(
                             )
                             val alt = formatUseCase.formatAltitude(uiState.location.altitude)
                             val text = buildString {
+                                append(stringLat)
                                 appendLine(lat)
+                                append(stringLon)
                                 appendLine(lon)
+                                append(stringAlt)
                                 append(alt)
                             }
                             copyToClipboard(AnnotatedString(text))
@@ -218,7 +235,16 @@ fun LocationDataPanel(
 
                 // 分享按钮（主要操作）
                 Button(
-                    onClick = { onIntent(CompassIntent.ShareCoordinates) },
+                    onClick = {
+                        val textStrings = ShareTextStrings(
+                            title = stringTitle,
+                            latLabel = stringLat,
+                            lonLabel = stringLon,
+                            altLabel = stringAlt,
+                            footer = stringFooter
+                        )
+                        onIntent(CompassIntent.ShareCoordinates(textStrings))
+                    },
                     enabled = uiState.location != null,
                     modifier = Modifier.weight(1f)
                 ) {

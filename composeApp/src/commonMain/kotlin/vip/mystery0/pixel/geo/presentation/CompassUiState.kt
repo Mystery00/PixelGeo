@@ -24,3 +24,11 @@ data class CompassUiState(
     val gpsSignalQuality: GpsSignalQuality = GpsSignalQuality.NONE,
     val attitude: Attitude? = null
 )
+
+data class ShareTextStrings(
+    val title: String,
+    val latLabel: String,
+    val lonLabel: String,
+    val altLabel: String,
+    val footer: String
+)

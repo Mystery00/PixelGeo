@@ -83,7 +83,11 @@ class CompassViewModel(
                 // 获取当前状态，生成分享文案并调用系统分享
                 val state = _uiState.value
                 state.location?.let { location ->
-                    val text = buildShareTextUseCase.execute(location, state.coordinateFormat)
+                    val text = buildShareTextUseCase.execute(
+                        location,
+                        state.coordinateFormat,
+                        intent.strings
+                    )
                     shareText(text)
                 }
             }

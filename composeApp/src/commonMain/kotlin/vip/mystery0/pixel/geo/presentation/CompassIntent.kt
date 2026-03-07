@@ -10,5 +10,5 @@ sealed interface CompassIntent {
     data class ToggleNorthMode(val mode: NorthMode) : CompassIntent         // 切换北极模式
     data class ToggleCoordinateFormat(val format: CoordinateFormat) : CompassIntent  // 切换坐标格式
     data object CopyCoordinates : CompassIntent              // 复制坐标（由 UI 层处理剪贴板）
-    data object ShareCoordinates : CompassIntent             // 分享坐标
+    data class ShareCoordinates(val strings: ShareTextStrings) : CompassIntent             // 分享坐标
 }

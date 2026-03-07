@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_text_title">📍 我的当前位置（WGS-84）</string>
+    <string name="share_text_lat">纬度：</string>
+    <string name="share_text_lon">经度：</string>
+    <string name="share_text_alt">海拔：</string>
+    <string name="share_text_footer">由 Pixel Geo（原点罗盘）测量</string>
+</resources>

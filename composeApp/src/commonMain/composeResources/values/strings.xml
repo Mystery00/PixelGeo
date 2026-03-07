@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_text_title">📍 My Current Location (WGS-84)</string>
+    <string name="share_text_lat">Latitude: </string>
+    <string name="share_text_lon">Longitude: </string>
+    <string name="share_text_alt">Altitude: </string>
+    <string name="share_text_footer">Measured by Pixel Geo</string>
+</resources>
