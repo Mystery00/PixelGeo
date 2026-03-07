@@ -1,5 +1,7 @@
 package vip.mystery0.pixel.geo.data.sensor
 
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,17 +51,21 @@ class IOSLocationCompassManager : CompassSensor, LocationSensor {
         }
 
         // 位置更新回调
+        @OptIn(ExperimentalForeignApi::class)
         override fun locationManager(
             manager: CLLocationManager,
             didUpdateLocations: List<*>
         ) {
             (didUpdateLocations.lastOrNull() as? CLLocation)?.let { location ->
-                _locationData.value = LocationModel(
-                    latitude = location.coordinate.latitude,
-                    longitude = location.coordinate.longitude,
-                    altitude = location.altitude,
-                    horizontalAccuracy = location.horizontalAccuracy
-                )
+                // CLLocationCoordinate2D 是 C struct，需通过 useContents 解包字段
+                location.coordinate.useContents {
+                    _locationData.value = LocationModel(
+                        latitude = latitude,
+                        longitude = longitude,
+                        altitude = location.altitude,
+                        horizontalAccuracy = location.horizontalAccuracy
+                    )
+                }
             }
         }
     }
