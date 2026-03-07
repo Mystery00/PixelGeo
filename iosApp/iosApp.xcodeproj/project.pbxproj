@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		F8F08FAF21B65A99A45B713B /* .app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = .app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F8F08FAF21B65A99A45B713B /* Pixel Geo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Pixel Geo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -50,7 +50,7 @@
 		929C5491E70C92C9A0D6E5C1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F8F08FAF21B65A99A45B713B /* .app */,
+				F8F08FAF21B65A99A45B713B /* Pixel Geo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = F8F08FAF21B65A99A45B713B /* .app */;
+			productReference = F8F08FAF21B65A99A45B713B /* Pixel Geo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
