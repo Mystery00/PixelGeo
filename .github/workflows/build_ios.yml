@@ -8,7 +8,7 @@ env:
   SIGN_KEY_STORE_FILE: "/tmp/key.jks"
   XCODE_PROJECT: iosApp
   MOBILE_DIRECTORY: iosApp
-  IPA_NAME: PixelGeo
+  IPA_NAME: "Pixel Geo"
 jobs:
   build-ios:
     runs-on: macos-latest
