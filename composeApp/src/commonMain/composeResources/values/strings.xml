@@ -5,4 +5,30 @@
     <string name="share_text_lon">Longitude: </string>
     <string name="share_text_alt">Altitude: </string>
     <string name="share_text_footer">Measured by Pixel Geo</string>
+
+    <string name="gps_accuracy">Accuracy: %1$s m</string>
+    <string name="gps_no_signal">No GPS Signal</string>
+
+    <string name="label_latitude">Latitude</string>
+    <string name="label_longitude">Longitude</string>
+    <string name="label_altitude">Altitude</string>
+
+    <string name="mode_true_north">True N</string>
+    <string name="mode_magnetic_north">Mag N</string>
+
+    <string name="btn_copy">Copy</string>
+    <string name="btn_share">Share</string>
+
+    <string name="getting_gps_signal">Acquiring GPS Signal…</string>
+
+    <string name="dir_n">N</string>
+    <string name="dir_e">E</string>
+    <string name="dir_s">S</string>
+    <string name="dir_w">W</string>
+    <string name="dir_ne">NE</string>
+    <string name="dir_nw">NW</string>
+    <string name="dir_se">SE</string>
+    <string name="dir_sw">SW</string>
+
+    <string name="attitude_format">Level: %1$s°  Roll: %2$s°</string>
 </resources>

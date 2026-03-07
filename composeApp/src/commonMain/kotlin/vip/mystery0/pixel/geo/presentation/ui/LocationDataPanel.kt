@@ -34,6 +34,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import pixelgeo.composeapp.generated.resources.Res
+import pixelgeo.composeapp.generated.resources.btn_copy
+import pixelgeo.composeapp.generated.resources.btn_share
+import pixelgeo.composeapp.generated.resources.gps_accuracy
+import pixelgeo.composeapp.generated.resources.gps_no_signal
+import pixelgeo.composeapp.generated.resources.label_altitude
+import pixelgeo.composeapp.generated.resources.label_latitude
+import pixelgeo.composeapp.generated.resources.label_longitude
+import pixelgeo.composeapp.generated.resources.mode_magnetic_north
+import pixelgeo.composeapp.generated.resources.mode_true_north
 import pixelgeo.composeapp.generated.resources.share_text_alt
 import pixelgeo.composeapp.generated.resources.share_text_footer
 import pixelgeo.composeapp.generated.resources.share_text_lat
@@ -101,9 +110,13 @@ fun LocationDataPanel(
 
             // 精度文字
             val accuracyText = if (uiState.location != null) {
-                formatString("精度: %.1f m", uiState.location.horizontalAccuracy)
+                val formattedAcc = formatString("%.1f", uiState.location.horizontalAccuracy)
+                stringResource(
+                    Res.string.gps_accuracy,
+                    formattedAcc
+                )
             } else {
-                "无 GPS 信号"
+                stringResource(Res.string.gps_no_signal)
             }
             Text(
                 text = accuracyText,
@@ -115,7 +128,7 @@ fun LocationDataPanel(
         // ── 2. 坐标数据行 ──────────────────────────────────────────────
         if (uiState.location != null) {
             CoordinateRow(
-                label = "纬度",
+                label = stringResource(Res.string.label_latitude),
                 value = formatUseCase.formatLatitude(
                     uiState.location.latitude,
                     uiState.coordinateFormat
@@ -123,7 +136,7 @@ fun LocationDataPanel(
                 isAltitude = false
             )
             CoordinateRow(
-                label = "经度",
+                label = stringResource(Res.string.label_longitude),
                 value = formatUseCase.formatLongitude(
                     uiState.location.longitude,
                     uiState.coordinateFormat
@@ -131,14 +144,26 @@ fun LocationDataPanel(
                 isAltitude = false
             )
             CoordinateRow(
-                label = "海拔",
+                label = stringResource(Res.string.label_altitude),
                 value = formatUseCase.formatAltitude(uiState.location.altitude),
                 isAltitude = true
             )
         } else {
-            CoordinateRow(label = "纬度", value = "--", isAltitude = false)
-            CoordinateRow(label = "经度", value = "--", isAltitude = false)
-            CoordinateRow(label = "海拔", value = "--", isAltitude = true)
+            CoordinateRow(
+                label = stringResource(Res.string.label_latitude),
+                value = "--",
+                isAltitude = false
+            )
+            CoordinateRow(
+                label = stringResource(Res.string.label_longitude),
+                value = "--",
+                isAltitude = false
+            )
+            CoordinateRow(
+                label = stringResource(Res.string.label_altitude),
+                value = "--",
+                isAltitude = true
+            )
         }
 
         // ── 3. 操作按钮区 ──────────────────────────────────────────────
@@ -161,7 +186,10 @@ fun LocationDataPanel(
                         shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                         colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
-                        Text(text = "真北", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = stringResource(Res.string.mode_true_north),
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                     SegmentedButton(
                         selected = uiState.northMode == NorthMode.MAGNETIC_NORTH,
@@ -169,7 +197,10 @@ fun LocationDataPanel(
                         shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                         colors = SegmentedButtonDefaults.colors(activeContainerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
-                        Text(text = "磁北", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = stringResource(Res.string.mode_magnetic_north),
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
 
@@ -230,7 +261,10 @@ fun LocationDataPanel(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Text(text = "复制", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = stringResource(Res.string.btn_copy),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
                 // 分享按钮（主要操作）
@@ -248,7 +282,10 @@ fun LocationDataPanel(
                     enabled = uiState.location != null,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = "分享", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = stringResource(Res.string.btn_share),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }

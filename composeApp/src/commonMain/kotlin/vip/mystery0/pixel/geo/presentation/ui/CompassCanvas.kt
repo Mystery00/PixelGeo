@@ -35,6 +35,18 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pixelgeo.composeapp.generated.resources.Res
+import pixelgeo.composeapp.generated.resources.attitude_format
+import pixelgeo.composeapp.generated.resources.dir_e
+import pixelgeo.composeapp.generated.resources.dir_n
+import pixelgeo.composeapp.generated.resources.dir_ne
+import pixelgeo.composeapp.generated.resources.dir_nw
+import pixelgeo.composeapp.generated.resources.dir_s
+import pixelgeo.composeapp.generated.resources.dir_se
+import pixelgeo.composeapp.generated.resources.dir_sw
+import pixelgeo.composeapp.generated.resources.dir_w
+import pixelgeo.composeapp.generated.resources.getting_gps_signal
 import vip.mystery0.pixel.geo.domain.model.Attitude
 import vip.mystery0.pixel.geo.util.formatString
 import kotlin.math.PI
@@ -103,6 +115,21 @@ fun CompassCanvas(
         color = colorScheme.onSurfaceVariant
     )
     val northLabelTextStyle = labelTextStyle.copy(color = colorScheme.primary)
+
+    // 提前在 @Composable 作用域内解析所需的字符串资源
+    val stringDirN = stringResource(Res.string.dir_n)
+    val stringDirE = stringResource(Res.string.dir_e)
+    val stringDirS = stringResource(Res.string.dir_s)
+    val stringDirW = stringResource(Res.string.dir_w)
+
+    val cardinals = remember(stringDirN, stringDirE, stringDirS, stringDirW) {
+        mapOf(
+            0 to stringDirN,
+            90 to stringDirE,
+            180 to stringDirS,
+            270 to stringDirW
+        )
+    }
 
     Column(
         modifier = modifier,
@@ -287,7 +314,6 @@ fun CompassCanvas(
 
                     // Draw Inner Cardinal Directions (北, 东, 南, 西)
                     val cardinalRadiusPx = edgeRadiusPx - longTickLengthPx - 30.dp.toPx()
-                    val cardinals = mapOf(0 to "北", 90 to "东", 180 to "南", 270 to "西")
 
                     val cardinalTextStyle = TextStyle(
                         fontSize = 20.sp,
@@ -336,7 +362,7 @@ fun CompassCanvas(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "正在获取 GPS 信号…",
+                        text = stringResource(Res.string.getting_gps_signal),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -344,14 +370,14 @@ fun CompassCanvas(
             } else {
                 val currentHeading = heading ?: animatedHeading
                 val directionText = when (currentHeading) {
-                    in 337.5..360.0, in 0.0..22.5 -> "北"
-                    in 22.5..67.5 -> "东北"
-                    in 67.5..112.5 -> "东"
-                    in 112.5..157.5 -> "东南"
-                    in 157.5..202.5 -> "南"
-                    in 202.5..247.5 -> "西南"
-                    in 247.5..292.5 -> "西"
-                    in 292.5..337.5 -> "西北"
+                    in 337.5..360.0, in 0.0..22.5 -> stringResource(Res.string.dir_n)
+                    in 22.5..67.5 -> stringResource(Res.string.dir_ne)
+                    in 67.5..112.5 -> stringResource(Res.string.dir_e)
+                    in 112.5..157.5 -> stringResource(Res.string.dir_se)
+                    in 157.5..202.5 -> stringResource(Res.string.dir_s)
+                    in 202.5..247.5 -> stringResource(Res.string.dir_sw)
+                    in 247.5..292.5 -> stringResource(Res.string.dir_w)
+                    in 292.5..337.5 -> stringResource(Res.string.dir_nw)
                     else -> ""
                 }
 
@@ -377,10 +403,10 @@ fun CompassCanvas(
                     if (attitude != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = formatString(
-                                "水平: %.1f°  翻滚: %.1f°",
-                                abs(attitude.pitch),
-                                abs(attitude.roll)
+                            text = stringResource(
+                                Res.string.attitude_format,
+                                formatString("%.1f", abs(attitude.pitch)),
+                                formatString("%.1f", abs(attitude.roll))
                             ),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontFamily = FontFamily.Monospace

@@ -5,4 +5,30 @@
     <string name="share_text_lon">经度：</string>
     <string name="share_text_alt">海拔：</string>
     <string name="share_text_footer">由 Pixel Geo（原点罗盘）测量</string>
+
+    <string name="gps_accuracy">精度: %1$s m</string>
+    <string name="gps_no_signal">无 GPS 信号</string>
+
+    <string name="label_latitude">纬度</string>
+    <string name="label_longitude">经度</string>
+    <string name="label_altitude">海拔</string>
+
+    <string name="mode_true_north">真北</string>
+    <string name="mode_magnetic_north">磁北</string>
+
+    <string name="btn_copy">复制</string>
+    <string name="btn_share">分享</string>
+
+    <string name="getting_gps_signal">正在获取 GPS 信号…</string>
+
+    <string name="dir_n">北</string>
+    <string name="dir_e">东</string>
+    <string name="dir_s">南</string>
+    <string name="dir_w">西</string>
+    <string name="dir_ne">东北</string>
+    <string name="dir_nw">西北</string>
+    <string name="dir_se">东南</string>
+    <string name="dir_sw">西南</string>
+
+    <string name="attitude_format">水平: %1$s°  翻滚: %2$s°</string>
 </resources>
