@@ -1,17 +1,14 @@
 package vip.mystery0.pixel.geo.presentation.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -67,16 +64,7 @@ fun LocationDataPanel(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // --- 0. 抽屉指示器 (Drag Handle) ---
-        Box(
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .width(36.dp)
-                .height(4.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(2.dp)
-                )
-        )
+        Spacer(modifier = Modifier.height(16.dp))
 
         // ── 1. GPS 信号质量指示器行 ──────────────────────────────────────
         Row(
