@@ -1,0 +1,111 @@
+name: Build iOS
+on:
+  workflow_dispatch:
+env:
+  XCODE_PROJECT: iosApp
+  MOBILE_DIRECTORY: iosApp
+  IPA_NAME: Pixel Geo
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 设置JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      - name: 设置Android SDK
+        uses: android-actions/setup-android@v3
+      - run: chmod a+x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+      - name: 更新iOS应用版本号
+        run: ./gradlew composeApp:updateAppleBuildVersion
+      - name: 安装Apple证书
+        id: profile
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISION_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          # 定义路径变量
+          CERTIFICATE_PATH=${{ runner.temp }}/build_certificate.p12
+          PP_PATH=${{ runner.temp }}/PixelGeoProfile.mobileprovision
+          KEYCHAIN_PATH=${{ runner.temp }}/app-signing.keychain-db
+
+          # 从 secrets 中解码证书和描述文件
+          echo -n "$IOS_CERTIFICATE" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$IOS_PROVISION_PROFILE" | base64 --decode -o $PP_PATH
+          uuid=`grep UUID -A1 -a $PP_PATH | grep -io "[-A-F0-9]\{36\}"`
+          echo "uuid=$uuid" >> $GITHUB_OUTPUT
+
+          # 创建临时 keychain
+          security create-keychain -p "$IOS_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # 导入证书到 keychain
+          security import $CERTIFICATE_PATH -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # 安装描述文件
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$uuid.mobileprovision
+      - name: 缓存Xcode编译数据
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: xcode-build
+          restore-keys: xcode-build
+      - name: 构建iOS APP
+        run: |
+          cd ${{ env.MOBILE_DIRECTORY }}
+          xcodebuild \
+            PROVISIONING_PROFILE=${{ steps.profile.outputs.uuid }} \
+            CODE_SIGN_STYLE=Manual \
+            -scheme ${{ env.XCODE_PROJECT }} \
+            -project ${{ env.XCODE_PROJECT }}.xcodeproj \
+            -configuration Release \
+            -arch arm64 \
+            archive \
+            -archivePath "${{ runner.temp }}/PixelGeo.xcarchive"
+      - name: 导出ipa
+        env:
+          EXPORT_PLIST: ${{ secrets.IOS_EXPORT_PRODUCTION }}
+        run: |
+          EXPORT_PLIST_PATH=${{ runner.temp }}/ExportOptions.plist
+          echo -n "$EXPORT_PLIST" | base64 --decode --output $EXPORT_PLIST_PATH
+          xcodebuild \
+            PROVISIONING_PROFILE=${{ steps.profile.outputs.uuid }} \
+            -exportArchive \
+            -archivePath ${{ runner.temp }}/PixelGeo.xcarchive \
+            -exportOptionsPlist $EXPORT_PLIST_PATH \
+            -exportPath ${{ runner.temp }}/export
+      - name: 解密App Store Connect API密钥
+        env:
+          API_KEY_BASE64: ${{ secrets.IOS_APPSTORE_API_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/private_keys
+          echo -n "$API_KEY_BASE64" | base64 --decode --output ~/private_keys/AuthKey_${{ secrets.IOS_APPSTORE_API_KEY_ID }}.p8
+      - name: 上传到Testflight
+        run: |
+          xcrun altool --validate-app \
+            -f "${{ runner.temp }}/export/${{ env.IPA_NAME }}.ipa" \
+            -t ios \
+            --apiKey ${{ secrets.IOS_APPSTORE_API_KEY_ID }} \
+            --apiIssuer ${{ secrets.IOS_APPSTORE_ISSUER_ID }}
+          xcrun altool --upload-app \
+            -f "${{ runner.temp }}/export/${{ env.IPA_NAME }}.ipa" \
+            -t ios \
+            --apiKey ${{ secrets.IOS_APPSTORE_API_KEY_ID }} \
+            --apiIssuer ${{ secrets.IOS_APPSTORE_ISSUER_ID }}
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipa-build
+          path: "${{ runner.temp }}/export/${{ env.IPA_NAME }}.ipa"

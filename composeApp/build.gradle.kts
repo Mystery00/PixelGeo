@@ -117,4 +117,17 @@ android {
 dependencies {
 }
 
+tasks.register("updateAppleBuildVersion") {
+    doLast {
+        val configTemplate = rootProject.file("iosApp/Configuration/Config.xcconfig.template")
+        val config = rootProject.file("iosApp/Configuration/Config.xcconfig")
+        val content = configTemplate.readText()
+        val newContent = content
+            .replace("{appVersionName}", appVersionName)
+            .replace("{gitVersionCode}", gitVersionCode.toString())
+        config.writeText(newContent)
+        println("Updated Config.xcconfig with version $appVersionName (Build $gitVersionCode)")
+    }
+}
+
 apply(from = rootProject.file("signing.gradle"))
