@@ -69,7 +69,8 @@ fun CompassCanvas(
     heading: Float?,
     isWaitingForGps: Boolean,
     attitude: Attitude?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLandscape: Boolean = false
 ) {
     // C1 修复：使用累积角度追踪绝对旋转量，避免 360°/0° 边界跨越时动画反转
     val accumulatedHeadingState = remember { mutableStateOf(heading ?: 0f) }
@@ -143,7 +144,7 @@ fun CompassCanvas(
         ) {
             Canvas(
                 modifier = Modifier
-                    .size(340.dp)
+                    .size(if (isLandscape) 240.dp else 340.dp)
             ) {
                 val center = Offset(size.width / 2f, size.height / 2f)
                 val radius = size.minDimension / 2f
@@ -346,7 +347,7 @@ fun CompassCanvas(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 32.dp))
 
         // 当前方位角显示，或真北等待态提示
         Box(

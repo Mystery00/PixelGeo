@@ -2,14 +2,19 @@ package vip.mystery0.pixel.geo.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -72,37 +77,86 @@ fun CompassScreen(viewModel: CompassViewModel = koinViewModel()) {
     val isWaitingForGps = uiState.northMode == NorthMode.TRUE_NORTH
             && uiState.heading.trueHeading == null
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 上半部分：指南针表盘
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            CompassCanvas(
-                heading = displayHeading,
-                isWaitingForGps = isWaitingForGps,
-                attitude = uiState.attitude
-            )
-        }
+        val isLandscape = maxWidth > maxHeight
 
-        // 下半部分：坐标数据面板（BottomSheet 卡片风格）
-        Surface(
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 12.dp
-        ) {
-            Column {
-                LocationDataPanel(
-                    uiState = uiState,
-                    onIntent = { viewModel.handleIntent(it) }
-                )
-                Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+        if (isLandscape) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                // 左半部分：指南针表盘
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CompassCanvas(
+                        heading = displayHeading,
+                        isWaitingForGps = isWaitingForGps,
+                        attitude = uiState.attitude,
+                        isLandscape = true
+                    )
+                }
+
+                // 右半部分：坐标数据面板
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 12.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        if (isLandscape) {
+                            Spacer(modifier = Modifier.weight(1F))
+                        }
+                        LocationDataPanel(
+                            uiState = uiState,
+                            onIntent = { viewModel.handleIntent(it) }
+                        )
+                        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                    }
+                }
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // 上半部分：指南针表盘
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CompassCanvas(
+                        heading = displayHeading,
+                        isWaitingForGps = isWaitingForGps,
+                        attitude = uiState.attitude
+                    )
+                }
+
+                // 下半部分：坐标数据面板（BottomSheet 卡片风格）
+                Surface(
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 12.dp
+                ) {
+                    Column {
+                        LocationDataPanel(
+                            uiState = uiState,
+                            onIntent = { viewModel.handleIntent(it) }
+                        )
+                        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                    }
+                }
             }
         }
     }
