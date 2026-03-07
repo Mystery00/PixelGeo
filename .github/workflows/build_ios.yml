@@ -31,7 +31,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
       - name: 更新iOS应用版本号
-        run: ./gradlew clean composeApp:updateAppleBuildVersion
+        run: ./gradlew composeApp:updateAppleBuildVersion
       - name: 安装Apple证书
         id: profile
         env:
