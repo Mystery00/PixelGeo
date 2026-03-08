@@ -1,6 +1,8 @@
 name: Build Android
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 env:
   AAB_DIR: "composeApp/build/outputs/bundle/release"
   SIGN_KEY_STORE_FILE: "/tmp/key.jks"
@@ -36,22 +38,13 @@ jobs:
           ./gradlew :composeApp:bundleRelease
       - name: 安装工具
         run: |
-          sudo apt-get install -y jq
           BUNDLETOOL_VERSION=1.17.2
           curl -fsSL "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar" -o bundletool.jar
-      - name: 解析版本信息
-        id: version
-        run: |
-          OUTPUT_METADATA_FILE="${{ env.AAB_DIR }}/output-metadata.json"
-          versionName=$(jq -r '.elements[0].versionName' "$OUTPUT_METADATA_FILE")
-          versionCode=$(jq -r '.elements[0].versionCode' "$OUTPUT_METADATA_FILE")
-          echo "versionName=$versionName" >> $GITHUB_OUTPUT
-          echo "versionCode=$versionCode" >> $GITHUB_OUTPUT
       - name: 生成 Universal APK
         run: |
           mkdir -p apk-output
           AAB_FILE="${{ env.AAB_DIR }}/composeApp-release.aab"
-          FILENAME="PixelGeo-${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}"
+          FILENAME="PixelGeo-${GITHUB_REF_NAME}"
           java -jar bundletool.jar build-apks \
             --bundle="$AAB_FILE" \
             --output=apk-output/app.apks \
@@ -67,11 +60,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.APP_RELEASE_TOKEN }}
-          tag_name: v${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}
-          name: PixelGeo ${{ steps.version.outputs.versionName }}
+          name: Pixel Geo ${{ github.ref_name }}
+          tag_name: v${{ github.ref_name }}
+          body: |
+            ## 下载
+            安装到手机请下载 `.apk` 文件。`.aab` 为开发者归档包。
           files: |
-            apk-output/PixelGeo-${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}.apk
-            apk-output/PixelGeo-${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}.aab
+            apk-output/PixelGeo-${{ github.ref_name }}.apk
+            apk-output/PixelGeo-${{ github.ref_name }}.aab
       - name: 清理签名文件
         if: always()
         run: rm -f "${{ env.SIGN_KEY_STORE_FILE }}"
