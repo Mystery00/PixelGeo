@@ -59,7 +59,6 @@ jobs:
       - name: 发布到 GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.APP_RELEASE_TOKEN }}
           name: Pixel Geo ${{ github.ref_name }}
           tag_name: v${{ github.ref_name }}
           body: |
