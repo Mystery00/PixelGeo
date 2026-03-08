@@ -1,0 +1,77 @@
+name: Build Android
+on:
+  workflow_dispatch:
+env:
+  AAB_DIR: "composeApp/build/outputs/bundle/release"
+  SIGN_KEY_STORE_FILE: "/tmp/key.jks"
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 设置JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      - name: 设置Android SDK
+        uses: android-actions/setup-android@v3
+      - name: 解密签名
+        run: |
+          echo ${{ secrets.SIGN_KEY_BASE64 }} | base64 --decode > /tmp/key.jks
+          echo ${{ secrets.AG_CONNECT_JSON }} | base64 --decode > composeApp/agconnect-services.json
+      - run: chmod a+x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+      - name: 构建 AAB
+        env:
+          SIGN_KEY_ALIAS: ${{ secrets.SIGN_KEY_ALIAS }}
+          SIGN_KEY_STORE_PASSWORD: ${{ secrets.SIGN_KEY_STORE_PASSWORD }}
+          SIGN_KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
+          SIGN_KEY_STORE_FILE: "/tmp/key.jks"
+        run: |
+          ./gradlew composeApp:updateAppleBuildVersion
+          ./gradlew :composeApp:bundleRelease
+      - name: 安装工具
+        run: |
+          sudo apt-get install -y jq
+          BUNDLETOOL_VERSION=1.17.2
+          curl -fsSL "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar" -o bundletool.jar
+      - name: 解析版本信息
+        id: version
+        run: |
+          OUTPUT_METADATA_FILE="${{ env.AAB_DIR }}/output-metadata.json"
+          versionName=$(jq -r '.elements[0].versionName' "$OUTPUT_METADATA_FILE")
+          versionCode=$(jq -r '.elements[0].versionCode' "$OUTPUT_METADATA_FILE")
+          echo "versionName=$versionName" >> $GITHUB_OUTPUT
+          echo "versionCode=$versionCode" >> $GITHUB_OUTPUT
+      - name: 生成 Universal APK
+        run: |
+          mkdir -p apk-output
+          AAB_FILE="${{ env.AAB_DIR }}/composeApp-release.aab"
+          FILENAME="PixelGeo-${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}"
+          java -jar bundletool.jar build-apks \
+            --bundle="$AAB_FILE" \
+            --output=apk-output/app.apks \
+            --mode=universal \
+            --ks="${{ env.SIGN_KEY_STORE_FILE }}" \
+            --ks-pass=pass:${{ secrets.SIGN_KEY_STORE_PASSWORD }} \
+            --ks-key-alias=${{ secrets.SIGN_KEY_ALIAS }} \
+            --key-pass=pass:${{ secrets.SIGN_KEY_PASSWORD }}
+          unzip apk-output/app.apks universal.apk -d apk-output/
+          mv apk-output/universal.apk "apk-output/${FILENAME}.apk"
+          cp "$AAB_FILE" "apk-output/${FILENAME}.aab"
+      - name: 发布到 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.APP_RELEASE_TOKEN }}
+          tag_name: v${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}
+          name: PixelGeo ${{ steps.version.outputs.versionName }}
+          files: |
+            apk-output/PixelGeo-${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}.apk
+            apk-output/PixelGeo-${{ steps.version.outputs.versionName }}-${{ steps.version.outputs.versionCode }}.aab
+      - name: 清理签名文件
+        if: always()
+        run: rm -f "${{ env.SIGN_KEY_STORE_FILE }}"
