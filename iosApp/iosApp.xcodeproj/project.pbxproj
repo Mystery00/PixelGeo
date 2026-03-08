@@ -244,6 +244,7 @@
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "我们需要获取您的位置信息，以便为您提供精确的实时经纬度和真北方向指示。";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "我们需要获取您的位置信息，以便为您提供精确的实时经纬度和真北方向指示。";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "我们需要获取您的位置信息，以便为您提供精确的实时经纬度和真北方向指示。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -282,6 +283,7 @@
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "我们需要获取您的位置信息，以便为您提供精确的实时经纬度和真北方向指示。";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "我们需要获取您的位置信息，以便为您提供精确的实时经纬度和真北方向指示。";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "我们需要获取您的位置信息，以便为您提供精确的实时经纬度和真北方向指示。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
