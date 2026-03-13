@@ -11,6 +11,7 @@
 <p align="center">
     <a href="https://github.com/Mystery00/PixelGeo/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelGeo" alt="GitHub Release"></a>
     <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.geo"><img src="https://img.shields.io/badge/Google_Play-PixelGeo-green?logo=google-play&logoColor=white" alt="Google Play"></a>
+    <a href="https://apps.apple.com/cn/app/%E5%8E%9F%E7%82%B9%E7%BD%97%E7%9B%98/id6760229476"><img src="https://img.shields.io/badge/App_Store-PixelGeo-blue?logo=apple&logoColor=white" alt="App Store"></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelGeo" alt="License"></a>
 </p>
 
@@ -29,7 +30,9 @@
 
 ## 应用截图
 
-![截图](docs/screenshots/screenshot.png)
+<p align="center">
+  <img src="docs/screenshots/screenshot.png" width="400" alt="软件截图"/>
+</p>
 
 ## 技术栈
 
@@ -61,14 +64,6 @@
 
 *   [隐私政策](PRIVACY.md)
 
-## 开源协议
+## 许可证
 
-本项目采用 [知识共享 署名-非商业性使用-相同方式共享 4.0 国际许可协议 (CC BY-NC-SA 4.0)](LICENSE) 进行许可。
-
-这意味着您可以自由地阅读、修改和分发本项目代码，但必须遵循以下条件：
-- **署名**：必须给出适当的署名。
-- **非商业性使用**：不得将本项目及其衍生版本用于任何商业目的。
-- **相同方式共享**：如果您再混合、转换或基于本项目进行创作，您必须基于与原先许可协议相同的许可协议分发您的贡献。
-
----
-由 Pixel Geo 开发团队维护。
+本项目采用 Apache License 2.0 许可证。详情请参阅 [LICENSE](LICENSE) 文件。
