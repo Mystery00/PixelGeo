@@ -1,8 +1,18 @@
 # 原点罗盘 (Pixel Geo)
 
-一款纯粹、专业的跨平台指南针与经纬度测绘工具。
+<p align="center">
+  <img src="composeApp/src/androidMain/ic_launcher-playstore.png" width="200" alt="Pixel Meter Logo"/>
+</p>
 
-![Icon](composeApp/src/androidMain/ic_launcher-playstore.png)
+<p align="center">
+  <strong>一款纯粹、专业的跨平台指南针与经纬度测绘工具。</strong>
+</p>
+
+<p align="center">
+    <a href="https://github.com/Mystery00/PixelGeo/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelGeo" alt="GitHub Release"></a>
+    <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.geo"><img src="https://img.shields.io/badge/Google_Play-PixelGeo-green?logo=google-play&logoColor=white" alt="Google Play"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelGeo" alt="License"></a>
+</p>
 
 ## 项目简介
 
@@ -19,7 +29,7 @@
 
 ## 应用截图
 
-![截图](docs/screenshots/screenshot.webp)
+![截图](docs/screenshots/screenshot.png)
 
 ## 技术栈
 
