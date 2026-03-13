@@ -1,35 +1,55 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# 原点罗盘 (Pixel Geo)
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+一款纯粹、专业的跨平台指南针与经纬度测绘工具。
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+![Icon](composeApp/src/androidMain/ic_launcher-playstore.png)
 
-### Build and Run Android Application
+## 项目简介
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+**原点罗盘 (Pixel Geo)** 是基于 Kotlin Multiplatform (KMP) 与 Compose Multiplatform 开发的开源工具应用。它专注于提供最原始、最精准的地理位置数据，直接调用硬件 API 获取 **WGS-84** 原始坐标，规避国内地图常见的偏移问题。
 
-### Build and Run iOS Application
+### 核心功能
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+*   **实时方位角**：提供 0° - 359° 高精度朝向显示，支持**真北 (True North)** 与 **磁北 (Magnetic North)** 切换。
+*   **WGS-84 原始坐标**：直接输出未经加密偏移的经纬度数据，适合专业测绘与户外探险。
+*   **坐标格式切换**：支持“度分秒 (DMS)”与“十进制度数 (DD)”双格式切换。
+*   **实时海拔高度**：显示当前位置的海拔数据。
+*   **GPS 信号质量监测**：直观反馈水平定位精度（<10m 优秀，10-50m 良好，>50m 较差）。
+*   **坐标分享与复制**：一键生成标准坐标文本，支持系统级分享。
+
+## 应用截图
+
+![截图](docs/screenshots/screenshot.webp)
+
+## 技术栈
+
+*   **跨平台框架**：Compose Multiplatform (Android / iOS)
+*   **架构模式**：Clean Architecture + MVI (Model-View-Intent)
+*   **异步处理**：Kotlin Coroutines & Flow
+*   **依赖注入**：Koin
+*   **权限管理**：MOKO Permissions
+*   **本地存储**：AndroidX DataStore Preferences
+
+## 项目结构
+
+*   `composeApp/commonMain`: 共享的 UI (Compose) 与业务逻辑 (ViewModel/UseCase)。
+*   `composeApp/androidMain`: Android 平台特定实现（SensorManager, FusedLocation）。
+*   `composeApp/iosMain`: iOS 平台特定实现（CLLocationManager）。
+
+## 构建与运行
+
+### Android
+```bash
+./gradlew :composeApp:assembleDebug
+```
+
+### iOS
+1. 在 macOS 上使用 Xcode 打开 `iosApp` 目录。
+2. 运行 `iosApp` 方案。
+
+## 相关文档
+
+*   [隐私政策](PRIVACY.md)
 
 ---
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+由 Pixel Geo 开发团队维护。
